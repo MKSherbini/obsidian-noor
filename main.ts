@@ -1,8 +1,13 @@
 import {App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting} from 'obsidian';
-
-let MersenneTwister = require("mersenne-twister")
+import {MersenneTwister} from './mersenne-twister'
+import * as obsidian from 'obsidian';
 
 // Remember to rename these classes and interfaces!
+declare global {
+	interface Window {
+		noorJS: any;
+	}
+}
 
 interface MyPluginSettings {
 	reciter: string;
@@ -13,16 +18,16 @@ interface MyPluginSettings {
 const DEFAULT_SETTINGS: MyPluginSettings = {
 	reciter: 'ar.abdulbasitmurattal',
 	translationLanguage: 'en',
-	translationOption: ''
+	translationOption: 'en.ahmedali'
 }
 
-const reciterOptions: { [key: string]: any } = {};
-const translationLanguagesOptions: { [key: string]: any } = {};
-const translationOptionsMap = new Map<string, { [key: string]: any }>();
-const g = new MersenneTwister();
 
 export default class NoorPlugin extends Plugin {
 	settings: MyPluginSettings;
+	reciterOptions: { [key: string]: any } = {};
+	translationLanguagesOptions: { [key: string]: any } = {};
+	translationOptionsMap = new Map<string, { [key: string]: any }>();
+	g = new MersenneTwister();
 
 	async onload() {
 		await this.loadSettings();
@@ -32,13 +37,20 @@ export default class NoorPlugin extends Plugin {
 		// translations.sort((a, b) => a.identifier > b.identifier ? 1 : -1);
 
 		reciters.forEach(reciter => {
-			reciterOptions[reciter.identifier] = reciter.englishName;
+			this.reciterOptions[reciter.identifier] = reciter.englishName;
 		})
 		translations.forEach(translation => {
-			translationLanguagesOptions[translation.language] = translation.language;
-			if (!translationOptionsMap.has(translation.language)) translationOptionsMap.set(translation.language, {});
-			translationOptionsMap.get(translation.language)![translation.identifier] = translation.name;
+			this.translationLanguagesOptions[translation.language] = translation.language;
+			if (!this.translationOptionsMap.has(translation.language)) this.translationOptionsMap.set(translation.language, {});
+			this.translationOptionsMap.get(translation.language)![translation.identifier] = translation.name;
 		});
+
+
+		window.noorJS = {
+			obsidian,
+			plugin: this,
+			randomQuranQuote: this.randomQuranQuoteJS,
+		}
 
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
@@ -54,26 +66,10 @@ export default class NoorPlugin extends Plugin {
 			id: 'random-quran-quote',
 			name: 'Random quran quote',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
-				let surah = g.randomInt() % 114;
-				let ayah = g.randomInt() % surahs[surah].numberOfAyahs;
-				console.log(surah)
-				console.log(ayah)
-				const [arabicResponse, translationResponse] = await Promise.all([
-					this.fetchData(surah, this.settings.reciter, ayah),
-					this.fetchData(surah, this.settings.translationOption, ayah)
-				]);
-				console.log(arabicResponse)
-				console.log(translationResponse)
 				editor.setSelection({line: editor.getCursor().line, ch: editor.getCursor().ch});
 				if (editor.getCursor().ch > 1)
 					editor.replaceSelection("\n")
-				editor.replaceSelection(`> [!Quote] "${arabicResponse.revelationType} Surah" ${arabicResponse.englishName} - [[${arabicResponse.number}:${arabicResponse.ayahs![0].numberInSurah}](https://surahquran.com/english.php?sora=${arabicResponse.number}&aya=${arabicResponse.ayahs![0].numberInSurah})]  ([Recitation](${arabicResponse.ayahs![0].audio}))
-> 
-> ${arabicResponse.ayahs![0].text}
-> 
-> ${translationResponse.ayahs![0].text}
-
-`);
+				editor.replaceSelection(await this.randomQuranQuote());
 			}
 		});
 
@@ -88,6 +84,26 @@ export default class NoorPlugin extends Plugin {
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		// this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+	}
+
+	private async randomQuranQuoteJS() {
+		return await window.noorJS.plugin.randomQuranQuote();
+	}
+
+	private async randomQuranQuote() {
+		let surah = this.g.randomInt() % 114;
+		let ayah = this.g.randomInt() % surahs[surah].numberOfAyahs;
+		const [arabicResponse, translationResponse] = await Promise.all([
+			this.fetchData(surah, this.settings.reciter, ayah),
+			this.fetchData(surah, this.settings.translationOption, ayah)
+		]);
+		return `> [!Quote] "${arabicResponse.revelationType} Surah" ${arabicResponse.englishName} - [[${arabicResponse.number}:${arabicResponse.ayahs![0].numberInSurah}](https://surahquran.com/english.php?sora=${arabicResponse.number}&aya=${arabicResponse.ayahs![0].numberInSurah})]  ([Recitation](${arabicResponse.ayahs![0].audio}))
+> 
+> ${arabicResponse.ayahs![0].text}
+> 
+> ${translationResponse.ayahs![0].text}
+
+`;
 	}
 
 	prepareAPIurl(surah: number, edition: string, startAyah: number, ayahRange = 1): string {
@@ -113,12 +129,11 @@ export default class NoorPlugin extends Plugin {
 	}
 
 	onunload() {
-
+		delete window.noorJS;
 	}
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-		console.log(this.settings)
 	}
 
 	async saveSettings() {
@@ -161,7 +176,7 @@ class NoorSettingTab extends PluginSettingTab {
 			.setDesc('Which translation language to use')
 			.addDropdown((dropdown) => {
 				dropdown
-					.addOptions(translationLanguagesOptions)
+					.addOptions(this.plugin.translationLanguagesOptions)
 					.setValue(this.plugin.settings.translationLanguage)
 					.onChange(async (value) => {
 						this.plugin.settings.translationLanguage = value
@@ -176,9 +191,9 @@ class NoorSettingTab extends PluginSettingTab {
 			.setDesc('Which translation to use')
 			.addDropdown((dropdown) => {
 				dropdown
-					.addOptions(translationOptionsMap.get(this.plugin.settings.translationLanguage)!)
+					.addOptions(this.plugin.translationOptionsMap.get(this.plugin.settings.translationLanguage)!)
 					.setValue(this.plugin.settings.translationOption == '' ?
-						Object.keys(translationOptionsMap.get(this.plugin.settings.translationLanguage)!)[0] :
+						Object.keys(this.plugin.translationOptionsMap.get(this.plugin.settings.translationLanguage)!)[0] :
 						this.plugin.settings.translationOption)
 					.onChange(async (value) => {
 						this.plugin.settings.translationOption = value
