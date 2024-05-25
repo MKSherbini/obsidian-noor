@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
+	"id": "obsidian-noor",
+	"name": "Noor",
+	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Aims to help muslims stay enlightened with Islam, Quran, Hadith, and Sunnah",
+	"author": "MKSherbini",
+	"authorUrl": "https://github.com/MKSherbini",
+	"fundingUrl": "Binance PayID: 713416926",
 	"isDesktopOnly": false
 }
