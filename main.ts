@@ -97,7 +97,10 @@ export default class NoorPlugin extends Plugin {
 			this.fetchData(surah, this.settings.reciter, ayah),
 			this.fetchData(surah, this.settings.translationOption, ayah)
 		]);
-		return `> [!Quote] "${arabicResponse.revelationType} Surah" ${arabicResponse.englishName} - [[${arabicResponse.number}:${arabicResponse.ayahs![0].numberInSurah}](https://surahquran.com/english.php?sora=${arabicResponse.number}&aya=${arabicResponse.ayahs![0].numberInSurah})]  ([Recitation](${arabicResponse.ayahs![0].audio}))
+		return `<audio src="${arabicResponse.ayahs![0].audio}" controls>
+<p> Audio tag not supported </p>
+</audio>
+> [!Quote] "${arabicResponse.revelationType} Surah" ${arabicResponse.englishName} - [[${arabicResponse.number}:${arabicResponse.ayahs![0].numberInSurah}](https://surahquran.com/english.php?sora=${arabicResponse.number}&aya=${arabicResponse.ayahs![0].numberInSurah})]
 > 
 > ${arabicResponse.ayahs![0].text}
 > 
