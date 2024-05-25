@@ -1,9 +1,9 @@
 {
-	"id": "obsidian-noor",
+	"id": "noor",
 	"name": "Noor",
 	"version": "0.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Aims to help muslims stay enlightened with Islam, Quran, Hadith, and Sunnah",
+	"description": "Aims to help Muslims stay enlightened with Islam, Quran, Hadith, and Sunnah",
 	"author": "MKSherbini",
 	"authorUrl": "https://github.com/MKSherbini",
 	"fundingUrl": "Binance PayID: 713416926",
