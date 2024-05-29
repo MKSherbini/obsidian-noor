@@ -1,8 +1,7 @@
-import {App, Editor, MarkdownView, Plugin, PluginSettingTab, Setting} from 'obsidian';
+import {App, Editor, MarkdownView, Plugin, PluginSettingTab, requestUrl, Setting} from 'obsidian';
 import {MersenneTwister} from './mersenne-twister'
 import * as obsidian from 'obsidian';
 
-// Remember to rename these classes and interfaces!
 declare global {
 	interface Window {
 		noorJS: any;
@@ -110,12 +109,12 @@ export default class NoorPlugin extends Plugin {
 	}
 
 	callApi<T>(url: string): Promise<T> {
-		return fetch(url)
+		return requestUrl(url)
 			.then(response => {
-				if (!response.ok) {
-					throw new Error(response.statusText)
+				if (response.status !== 200) {
+					throw new Error(`${response.status}: ${response.text}`)
 				}
-				return response.json() as Promise<{ data: T }>
+				return response.json as Promise<{ data: T }>
 			})
 			.then(data => {
 				return data.data
@@ -147,9 +146,6 @@ class NoorSettingTab extends PluginSettingTab {
 	display(): void {
 		const {containerEl} = this;
 
-		containerEl.empty();
-		containerEl.createEl('h2', {text: 'Noor Settings'});
-
 		new Setting(containerEl)
 			.setName('Reciter')
 			.setDesc('Which reciter voice to use')
@@ -164,7 +160,7 @@ class NoorSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Translation Language')
+			.setName('Translation language')
 			.setDesc('Which translation language to use')
 			.addDropdown((dropdown) => {
 				dropdown
@@ -179,7 +175,7 @@ class NoorSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Translation Options')
+			.setName('Translation options')
 			.setDesc('Which translation to use')
 			.addDropdown(async (dropdown) => {
 				dropdown
