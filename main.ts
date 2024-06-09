@@ -82,7 +82,7 @@ export default class NoorPlugin extends Plugin {
 
 	private async randomQuranQuote() {
 		let surah = this.g.randomInt() % 114 + 1;
-		let ayah = (this.g.randomInt() % surahs[surah].numberOfAyahs) + 1;
+		let ayah = (this.g.randomInt() % surahs[surah - 1].numberOfAyahs) + 1;
 		const [arabicResponse, translationResponse] = await Promise.all([
 			this.fetchData(surah, this.settings.reciter, ayah),
 			this.fetchData(surah, this.settings.translationOption, ayah)
