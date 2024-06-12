@@ -54,7 +54,7 @@ export default class NoorPlugin extends Plugin {
 		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
 			id: 'random-quran-quote',
-			name: 'Random quran quote',
+			name: 'Random Quran quote',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				editor.setSelection({line: editor.getCursor().line, ch: editor.getCursor().ch});
 				if (editor.getCursor().ch > 1)
