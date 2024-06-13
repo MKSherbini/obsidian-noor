@@ -4,6 +4,10 @@ import * as obsidian from 'obsidian';
 import {DEFAULT_SETTINGS, NoorPluginSettings, NoorSettingTab} from './settings'
 import {Surah} from "./models/Surah";
 import {surahs} from "./constants/surahs";
+import {hadiths} from "./constants/hadiths";
+import {EditorUtils} from "./utils/EditorUtils";
+import {Hadith} from "./models/Hadith";
+import {lineNumbers} from "@codemirror/view";
 
 declare global {
 	interface Window {
@@ -22,6 +26,7 @@ export default class NoorPlugin extends Plugin {
 			obsidian,
 			plugin: this,
 			randomQuranQuote: this.randomQuranQuoteJS,
+			randomHadithQuote: this.randomHadithQuoteJS,
 		}
 
 
@@ -30,10 +35,15 @@ export default class NoorPlugin extends Plugin {
 			id: 'random-quran-quote',
 			name: 'Random Quran quote',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
-				editor.setSelection({line: editor.getCursor().line, ch: editor.getCursor().ch});
-				if (editor.getCursor().ch > 1)
-					editor.replaceSelection("\n")
-				editor.replaceSelection(await this.randomQuranQuote());
+				EditorUtils.insertInNewLine(editor, await this.randomQuranQuote());
+			}
+		});
+
+		this.addCommand({
+			id: 'random-hadith-quote',
+			name: 'Random Hadith quote',
+			editorCallback: async (editor: Editor, view: MarkdownView) => {
+				EditorUtils.insertInNewLine(editor, await this.randomHadithQuote());
 			}
 		});
 
@@ -48,6 +58,50 @@ export default class NoorPlugin extends Plugin {
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		// this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+	}
+
+	private async randomHadithQuoteJS() {
+		return await window.noorJS.plugin.randomHadithQuote();
+	}
+
+	private async randomHadithQuote() {
+		let hadith = hadiths[this.g.randomInt() % hadiths.length];
+		return `> [!Quote] ${hadith.grade} - ${hadith.takhrij}
+> ${hadith.hadith_text}
+> > [!Quote]+ مزيد
+${this.getHadithExplanation(hadith)}${this.getHadithWordMeanings(hadith)}
+${this.getHadithBenefits(hadith)}
+`
+	}
+
+	private getHadithWordMeanings(hadith: Hadith) {
+		if (hadith.word_meanings == null) return '';
+		let title = 'معاني الكلمات';
+		return `
+>> - **${title}**:
+` + hadith.word_meanings
+			.split('\n')
+			.filter(line => line.trim().length > 0)
+			.map(line => {
+				let idx = line.indexOf(':');
+				return `>>     - **${line.slice(0, idx - 1)}**: ${line.slice(idx + 1)}`
+			}).join('\n');
+	}
+
+	private getHadithBenefits(hadith: Hadith) {
+		let title = 'من فوائد الحديث';
+		return `>> - **${title}**:
+` + hadith.benefits
+			.split('\n')
+			.filter(line => line.trim().length > 0)
+			.map(line => {
+				return `>>     - ${line}`
+			}).join('\n');
+	}
+
+	private getHadithExplanation(hadith: Hadith) {
+		let title = 'الشرح';
+		return `>> - **${title}**: ${hadith.explanation}`;
 	}
 
 	private async randomQuranQuoteJS() {
@@ -69,7 +123,6 @@ export default class NoorPlugin extends Plugin {
 > ${arabicResponse.ayahs![0].text}
 > 
 > ${translationResponse.ayahs![0].text}
-
 `;
 	}
 
@@ -101,7 +154,6 @@ export default class NoorPlugin extends Plugin {
 
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-		console.log(this.settings)
 	}
 
 	async saveSettings() {
