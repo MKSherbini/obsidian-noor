@@ -1,9 +1,16 @@
 export interface Hadith {
-	id: number;
-	hadith_text: string;
-	explanation: string;
-	word_meanings?: string;
-	benefits: string;
-	grade: string;
-	takhrij: string;
+	id: string
+	title: string
+	hadeeth: string
+	attribution: string
+	grade: string
+	explanation: string
+	hints: Array<string>
+	categories: Array<any>
+	translations: Array<string>
+	words_meanings?: Array<{
+		word: string
+		meaning: string
+	}>
+	reference: string
 }
