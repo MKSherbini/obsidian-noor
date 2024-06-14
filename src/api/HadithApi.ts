@@ -15,14 +15,15 @@ export class HadithApi {
 		// console.log(hadith)
 		let hadith: null | Hadith;
 		do {
-			hadith = await this.fetchData("ar", hadiths[this.plugin.randomGenerator.randomInt() % hadiths.length]);
+			hadith = await this.fetchData(this.plugin.settings.hadithLanguage, hadiths[this.plugin.randomGenerator.randomInt() % hadiths.length]);
 		} while (hadith == null)
+
+		let moreKeyword = this.plugin.settings.hadithLanguage == 'ar' ? 'مزيد' : 'more';
 
 		return `> [!Quote] [${hadith.grade} - ${hadith.attribution}](https://hadeethenc.com/ar/browse/hadith/${hadith.id})
 > ${hadith.hadeeth}
-> > [!Quote]+ مزيد
-${this.getHadithExplanation(hadith)}${this.getHadithWordMeanings(hadith)}
-${this.getHadithBenefits(hadith)}
+> > [!Quote]+ ${moreKeyword}
+${this.getHadithExplanation(hadith)}${this.getHadithWordMeanings(hadith)}${this.getHadithBenefits(hadith)}
 `
 	}
 
@@ -43,8 +44,8 @@ ${this.getHadithBenefits(hadith)}
 	}
 
 	private getHadithWordMeanings(hadith: Hadith) {
-		if (hadith.words_meanings == null) return '';
-		let title = 'معاني الكلمات';
+		if (hadith.words_meanings == null || hadith.words_meanings.length == 0) return '';
+		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'معاني الكلمات' : "Word meanings";
 		return `
 >> - **${title}**:
 ` + hadith.words_meanings
@@ -54,8 +55,10 @@ ${this.getHadithBenefits(hadith)}
 	}
 
 	private getHadithBenefits(hadith: Hadith) {
-		let title = 'من فوائد الحديث';
-		return `>> - **${title}**:
+		if (hadith.hints == null || hadith.hints.length == 0) return '';
+		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'من فوائد الحديث' : 'Benefits';
+		return `
+>> - **${title}**:
 ` + hadith.hints
 			.filter(line => line.trim().length > 0)
 			.map(line => {
@@ -64,7 +67,7 @@ ${this.getHadithBenefits(hadith)}
 	}
 
 	private getHadithExplanation(hadith: Hadith) {
-		let title = 'الشرح';
+		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'الشرح' : 'Explanation';
 		return `>> - **${title}**: ${hadith.explanation}`;
 	}
 }

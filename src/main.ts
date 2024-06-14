@@ -66,7 +66,7 @@ export default class NoorPlugin extends Plugin {
 	}
 
 	private async randomHadithQuoteJS() {
-		return await window.noorJS.plugin.randomHadithQuote();
+		return await window.noorJS.plugin.hadithApi.randomHadithQuote();
 	}
 
 

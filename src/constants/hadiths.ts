@@ -1,3 +1,27 @@
+export const hadithLanguages: Record<string, string> = {
+	"ar": "ar",
+	"bn": "bn",
+	"bs": "bs",
+	"en": "en",
+	"es": "es",
+	"fa": "fa",
+	"fr": "fr",
+	"ha": "ha",
+	"hi": "hi",
+	"id": "id",
+	"ku": "ku",
+	"pt": "pt",
+	"ru": "ru",
+	"si": "si",
+	"sw": "sw",
+	"tl": "tl",
+	"tr": "tr",
+	"ug": "ug",
+	"ur": "ur",
+	"vi": "vi",
+	"zh": "zh",
+};
+
 export const hadiths: number[] = [
 	1751,
 	2750,

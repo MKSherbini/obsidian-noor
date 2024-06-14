@@ -2,17 +2,20 @@ import {App, PluginSettingTab, Setting} from 'obsidian';
 import NoorPlugin from "./main";
 import {reciters} from "./constants/reciters";
 import {translations} from "./constants/translations";
+import {hadithLanguages} from "./constants/hadiths";
 
 export interface NoorPluginSettings {
 	reciter: string;
 	translationLanguage: string;
 	translationOption: string;
+	hadithLanguage: string;
 }
 
 export const DEFAULT_SETTINGS: NoorPluginSettings = {
 	reciter: 'ar.abdulbasitmurattal',
 	translationLanguage: 'en',
-	translationOption: 'en.ahmedali'
+	translationOption: 'en.ahmedali',
+	hadithLanguage: 'ar'
 }
 
 
@@ -42,6 +45,9 @@ export class NoorSettingTab extends PluginSettingTab {
 
 	display(): void {
 		const {containerEl} = this;
+
+		containerEl.empty();
+		containerEl.createEl('h3', {text: 'Quran Settings'});
 
 		new Setting(containerEl)
 			.setName('Reciter')
@@ -80,6 +86,22 @@ export class NoorSettingTab extends PluginSettingTab {
 					.setValue(await this.getTranslationValue())
 					.onChange(async (value) => {
 						this.plugin.settings.translationOption = value
+						await this.plugin.saveSettings();
+					});
+			});
+
+		containerEl.createEl("br");
+		containerEl.createEl('h3', {text: 'Hadith Settings'});
+
+		new Setting(containerEl)
+			.setName('Hadith language')
+			.setDesc('Which hadith language to use')
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOptions(hadithLanguages)
+					.setValue(this.plugin.settings.hadithLanguage)
+					.onChange(async (value) => {
+						this.plugin.settings.hadithLanguage = value
 						await this.plugin.saveSettings();
 					});
 			});
