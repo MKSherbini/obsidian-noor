@@ -6,6 +6,7 @@ import {hadithLanguages} from "./constants/hadiths";
 
 export interface NoorPluginSettings {
 	reciter: string;
+	showTranslation: boolean;
 	translationLanguage: string;
 	translationOption: string;
 	hadithLanguage: string;
@@ -13,6 +14,7 @@ export interface NoorPluginSettings {
 
 export const DEFAULT_SETTINGS: NoorPluginSettings = {
 	reciter: 'ar.abdulbasitmurattal',
+	showTranslation: true,
 	translationLanguage: 'en',
 	translationOption: 'en.ahmedali',
 	hadithLanguage: 'ar'
@@ -63,32 +65,48 @@ export class NoorSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Translation language')
-			.setDesc('Which translation language to use')
-			.addDropdown((dropdown) => {
-				dropdown
-					.addOptions(this.translationLanguagesOptions)
-					.setValue(this.plugin.settings.translationLanguage)
+			.setName('Show translation')
+			.setDesc('Show quran translation in another language')
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.showTranslation)
 					.onChange(async (value) => {
-						this.plugin.settings.translationLanguage = value
-						this.plugin.settings.translationOption = '';
+						this.plugin.settings.showTranslation = value
 						await this.plugin.saveSettings();
 						this.display();
 					});
 			});
 
-		new Setting(containerEl)
-			.setName('Translation options')
-			.setDesc('Which translation to use')
-			.addDropdown(async (dropdown) => {
-				dropdown
-					.addOptions(this.translationOptionsMap.get(this.plugin.settings.translationLanguage)!)
-					.setValue(await this.getTranslationValue())
-					.onChange(async (value) => {
-						this.plugin.settings.translationOption = value
-						await this.plugin.saveSettings();
-					});
-			});
+		if (this.plugin.settings.showTranslation) {
+			new Setting(containerEl)
+				.setName('Translation language')
+				.setDesc('Which translation language to use')
+				.addDropdown((dropdown) => {
+					dropdown
+						.addOptions(this.translationLanguagesOptions)
+						.setValue(this.plugin.settings.translationLanguage)
+						.onChange(async (value) => {
+							this.plugin.settings.translationLanguage = value
+							this.plugin.settings.translationOption = Object.keys(this.translationOptionsMap.get(this.plugin.settings.translationLanguage)!)[0];
+							await this.plugin.saveSettings();
+							this.display();
+						});
+				});
+
+			new Setting(containerEl)
+				.setName('Translation options')
+				.setDesc('Which translation to use')
+				.addDropdown(async (dropdown) => {
+					dropdown
+						.addOptions(this.translationOptionsMap.get(this.plugin.settings.translationLanguage)!)
+						.setValue(this.plugin.settings.translationOption)
+						.onChange(async (value) => {
+							this.plugin.settings.translationOption = value
+							await this.plugin.saveSettings();
+						});
+				});
+		}
+
 
 		containerEl.createEl("br");
 		containerEl.createEl('h3', {text: 'Hadith Settings'});
@@ -106,13 +124,5 @@ export class NoorSettingTab extends PluginSettingTab {
 					});
 			});
 
-	}
-
-	private async getTranslationValue() {
-		if (this.plugin.settings.translationOption == '')
-			this.plugin.settings.translationOption = Object.keys(this.translationOptionsMap.get(this.plugin.settings.translationLanguage)!)[0];
-		await this.plugin.saveSettings();
-
-		return this.plugin.settings.translationOption;
 	}
 }

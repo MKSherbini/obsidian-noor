@@ -32,6 +32,7 @@ obsidian plugins complement each other, here are some ideas
 
 ### Quran settings
 - **Reciter**: choose your favorite reciter from the drop-down menu
+- **Show translation**: choose Arabic only or dual language mode
 - **Translation Language**: choose the second language to show next to Arabic
 - **Translation Options**: choose your favorite translation from the ones available in selected **Translation Language**
 

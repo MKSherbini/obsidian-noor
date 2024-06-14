@@ -21,12 +21,28 @@ export class QuranApi {
 		return `<audio src="${arabicResponse.ayahs![0].audio}" controls>
 <p> Audio tag not supported </p>
 </audio>
-> [!Quote] "${arabicResponse.revelationType} Surah" ${arabicResponse.englishName} - [[${arabicResponse.number}:${arabicResponse.ayahs![0].numberInSurah}](https://surahquran.com/english.php?sora=${arabicResponse.number}&aya=${arabicResponse.ayahs![0].numberInSurah})]
+> [!Quote] ${this.getSurahTitle(arabicResponse)} - [[${arabicResponse.number}:${arabicResponse.ayahs![0].numberInSurah}](https://surahquran.com/english.php?sora=${arabicResponse.number}&aya=${arabicResponse.ayahs![0].numberInSurah})]
 > 
-> ${arabicResponse.ayahs![0].text}
-> 
-> ${translationResponse.ayahs![0].text}
+> ${arabicResponse.ayahs![0].text}${this.getTranslation(translationResponse)}
 `;
+	}
+
+	private getSurahTitle(arabicResponse: Surah) {
+		let arabicRevelation = arabicResponse.revelationType == 'Meccan' ? 'مكية' : 'مدنية';
+		// let revelationLocation = this.plugin.settings.showTranslation ?
+		// 	`${arabicResponse.revelationType} Surah`
+		// 	: `سورة ${arabicRevelation}`;
+
+		let revelationLocation = this.plugin.settings.showTranslation ? arabicResponse.revelationType : arabicRevelation;
+		let surahName = this.plugin.settings.showTranslation ? arabicResponse.englishName : arabicResponse.name;
+		return `${surahName} "${revelationLocation}"`;
+	}
+
+	getTranslation(translationResponse: Surah) {
+		if (!this.plugin.settings.showTranslation) return '';
+		return `
+> 
+> ${translationResponse.ayahs![0].text}`
 	}
 
 	prepareAPIurl(surah: number, edition: string, startAyah: number, ayahRange = 1): string {
