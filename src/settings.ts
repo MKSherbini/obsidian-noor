@@ -5,6 +5,7 @@ import {translations} from "./constants/translations";
 import {hadithLanguages} from "./constants/hadiths";
 
 export interface NoorPluginSettings {
+	dhikrFilepath: string;
 	reciter: string;
 	showTranslation: boolean;
 	translationLanguage: string;
@@ -13,6 +14,7 @@ export interface NoorPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: NoorPluginSettings = {
+	dhikrFilepath: 'dhikr.md',
 	reciter: 'ar.abdulbasitmurattal',
 	showTranslation: true,
 	translationLanguage: 'en',
@@ -49,6 +51,20 @@ export class NoorSettingTab extends PluginSettingTab {
 		const {containerEl} = this;
 
 		containerEl.empty();
+		containerEl.createEl('h3', {text: 'General Settings'});
+
+		new Setting(containerEl)
+			.setName("Dhikr file path")
+			.setDesc("where to create the Dhikr note")
+			.addText(text=>
+				text
+					.setValue(this.plugin.settings.dhikrFilepath)
+					.onChange(async (value) => {
+						this.plugin.settings.dhikrFilepath = value;
+						await this.plugin.saveSettings();
+					})
+			)
+
 		containerEl.createEl('h3', {text: 'Quran Settings'});
 
 		new Setting(containerEl)

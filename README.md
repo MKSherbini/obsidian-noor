@@ -1,6 +1,6 @@
 # Obsidian Noor Plugin
 
-[Noor](https://github.com/MKSherbini/obsidian-noor) is a plugin for [Obsidian.md](https://obsidian.md/). It aims to help muslims stay enlightened with Islam, Quran, Hadith, and Sunnah
+[Noor](https://github.com/MKSherbini/obsidian-noor) is a plugin for [Obsidian.md](https://obsidian.md/). It aims to help Muslims stay enlightened with Islam, Quran, Hadith, and Sunnah
 
 [![Watch the video](https://img.youtube.com/vi/eKgS6iop58Q/maxresdefault.jpg)](https://youtu.be/eKgS6iop58Q)
 
@@ -8,14 +8,17 @@
 
 ## Features
 - Insert a **Quran Quote** at the current location containing a random verse with recitation in Arabic, chosen translation language, and a hyperlink for more info.
-- Insert a **Hadith Quote** at the current location containing a random hadith in chosen language and a hyperlink for more info.
+- Insert a **Hadith Quote** at the current location containing a random hadith in the chosen language and a hyperlink for more info.
+- Create a **Dhikr file** at the configured location containing a **Quran Quote** and a **Hadith Quote** (can be used again to update file with new quotes)
 
 ## Usage
 After enabling the plugin in the settings menu, you should see the added commands and the `noorJS` object.
 
 - commands:
-  - `Noor: Random Quran quote`: inserts a quote block at the current editor location containing a Quran Quote
-  - `Noor: Random Hadith quote`: inserts a quote block at the current editor location containing a Hadith Quote
+  - `Noor: Random Quran quote`: inserts a quote block at the current editor location containing a **Quran Quote**
+  - `Noor: Random Hadith quote`: inserts a quote block at the current editor location containing a **Hadith Quote**
+  - `Noor: Open Dhikr file`: creates a **Dhikr file** at the configured location containing a **Quran Quote** and a **Hadith Quote** then opens in current view
+  - `Noor: Open Dhikr file popup`: creates a **Dhikr file** at the configured location containing a **Quran Quote** and a **Hadith Quote** then opens in popup window view
 - scripting:
   - `noorJS.randomQuranQuote()`: this function returns a Quran Quote
   - `noorJS.randomHadithQuote()`: this function returns a Hadith Quote
@@ -29,6 +32,9 @@ obsidian plugins complement each other, here are some ideas
 
 
 ## Settings
+
+### General settings
+- **Dhikr file path**: configure where to create the Dhikr file
 
 ### Quran settings
 - **Reciter**: choose your favorite reciter from the drop-down menu
@@ -44,7 +50,7 @@ obsidian plugins complement each other, here are some ideas
 
 - Copy over `main.js`, `manifest.json` to your vault `.obsidian/plugins/noor/`.
 - Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
+- Enable the plugin in the settings window.
 
 
 ## Attributions
