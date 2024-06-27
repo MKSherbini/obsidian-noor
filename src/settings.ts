@@ -3,6 +3,7 @@ import NoorPlugin from "./main";
 import {reciters} from "./constants/reciters";
 import {translations} from "./constants/translations";
 import {hadithLanguages} from "./constants/hadiths";
+import {languageNames} from "./constants/languages";
 
 export interface NoorPluginSettings {
 	dhikrFilepath: string;
@@ -26,7 +27,7 @@ export const DEFAULT_SETTINGS: NoorPluginSettings = {
 export class NoorSettingTab extends PluginSettingTab {
 	plugin: NoorPlugin;
 	reciterOptions: { [key: string]: any } = {};
-	translationLanguagesOptions: { [key: string]: any } = {};
+	translationLanguagesOptions: { [key: string]: string } = {};
 	translationOptionsMap = new Map<string, { [key: string]: any }>();
 
 	constructor(app: App, plugin: NoorPlugin) {
@@ -41,10 +42,14 @@ export class NoorSettingTab extends PluginSettingTab {
 			this.reciterOptions[reciter.identifier] = reciter.englishName;
 		})
 		translations.forEach(translation => {
-			this.translationLanguagesOptions[translation.language] = translation.language;
+			let languageName = languageNames.get(translation.language);
+			if (languageName != void 0)
+				this.translationLanguagesOptions[translation.language] = languageName;
 			if (!this.translationOptionsMap.has(translation.language)) this.translationOptionsMap.set(translation.language, {});
 			this.translationOptionsMap.get(translation.language)![translation.identifier] = translation.name;
 		});
+
+		this.translationLanguagesOptions = Object.fromEntries(Object.entries(this.translationLanguagesOptions).sort((a, b) => a[1].localeCompare(b[1])))
 	}
 
 	display(): void {
@@ -56,7 +61,7 @@ export class NoorSettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Dhikr file path")
 			.setDesc("where to create the Dhikr note")
-			.addText(text=>
+			.addText(text =>
 				text
 					.setValue(this.plugin.settings.dhikrFilepath)
 					.onChange(async (value) => {
