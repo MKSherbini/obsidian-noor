@@ -13,7 +13,7 @@ export class QuranApi {
 
 	public async randomQuranQuote() {
 		let surah = this.plugin.randomGenerator.randomInt() % 114 + 1;
-		let ayah = (this.plugin.randomGenerator.randomInt() % surahs[surah - 1].numberOfAyahs) + 1;
+		let ayah = (this.plugin.randomGenerator.randomInt() % surahs[surah - 1].numberOfAyahs);
 		const [arabicResponse, translationResponse] = await Promise.all([
 			this.fetchData(surah, this.plugin.settings.reciter, ayah),
 			this.fetchData(surah, this.plugin.settings.translationOption, ayah)
