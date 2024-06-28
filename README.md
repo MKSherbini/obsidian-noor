@@ -2,7 +2,7 @@
 
 [Noor](https://github.com/MKSherbini/obsidian-noor) is a plugin for [Obsidian.md](https://obsidian.md/). It aims to help Muslims stay enlightened with Islam, Quran, Hadith, and Sunnah
 
-[![Watch the video](https://img.youtube.com/vi/eKgS6iop58Q/maxresdefault.jpg)](https://youtu.be/eKgS6iop58Q)
+[![Watch the video](https://img.youtube.com/vi/HixhQK6CVXI/maxresdefault.jpg)](https://youtu.be/HixhQK6CVXI)
 
 
 
