@@ -16,6 +16,7 @@ export class HadithApi {
 		let hadith: null | Hadith;
 		do {
 			hadith = await this.fetchData(this.plugin.settings.hadithLanguage, hadiths[this.plugin.randomGenerator.randomInt() % hadiths.length]);
+			// hadith = await this.fetchData(this.plugin.settings.hadithLanguage, 4176);
 		} while (hadith == null)
 
 		let moreKeyword = this.plugin.settings.hadithLanguage == 'ar' ? 'مزيد' : 'more';
@@ -62,12 +63,12 @@ ${this.getHadithExplanation(hadith)}${this.getHadithWordMeanings(hadith)}${this.
 ` + hadith.hints
 			.filter(line => line.trim().length > 0)
 			.map(line => {
-				return `>>     - ${line}`
+				return `>>     - ${line.replace("\r", "")}`
 			}).join('\n');
 	}
 
 	private getHadithExplanation(hadith: Hadith) {
 		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'الشرح' : 'Explanation';
-		return `>> - **${title}**: ${hadith.explanation}`;
+		return `>> - **${title}**: ${hadith.explanation.replace(/\r\n\r\n/g, '\r\n')}`;
 	}
 }
