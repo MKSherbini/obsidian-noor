@@ -24,7 +24,7 @@ export class HadithApi {
 
 	public async hadithQuoteByCode(code: string) {
 		let hadith = await this.fetchData(this.plugin.settings.hadithLanguage, +code);
-		if (hadith == null) return 'not found';
+		if (hadith == null) return 'Not found.';
 
 		return this.formatHadith(hadith);
 	}

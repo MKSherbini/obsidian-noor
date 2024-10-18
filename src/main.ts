@@ -28,6 +28,7 @@ export default class NoorPlugin extends Plugin {
 			obsidian,
 			plugin: this,
 			randomQuranQuote: this.randomQuranQuoteJS,
+			quranQuoteByCode: this.quranQuoteByCodeJS,
 			randomHadithQuote: this.randomHadithQuoteJS,
 			hadithQuoteByCode: this.hadithQuoteByCodeJS,
 		}
@@ -39,6 +40,14 @@ export default class NoorPlugin extends Plugin {
 			name: 'Random Quran quote',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				EditorUtils.insertInNewLine(editor, await this.quranApi.randomQuranQuote());
+			}
+		});
+
+		this.addCommand({
+			id: 'quran-quote-by-code',
+			name: 'Quran quote by code',
+			editorCallback: async (editor: Editor, view: MarkdownView) => {
+				editor.replaceSelection(await this.quranApi.quranQuoteByCode(editor.getSelection()));
 			}
 		});
 
@@ -110,12 +119,16 @@ export default class NoorPlugin extends Plugin {
 		return await window.noorJS.plugin.hadithApi.randomHadithQuote();
 	}
 
-	private async hadithQuoteByCodeJS(code: number) {
+	private async hadithQuoteByCodeJS(code: string) {
 		return await window.noorJS.plugin.hadithApi.hadithQuoteByCode(code);
 	}
 
 	private async randomQuranQuoteJS() {
 		return await window.noorJS.plugin.quranApi.randomQuranQuote();
+	}
+
+	private async quranQuoteByCodeJS(code: string) {
+		return await window.noorJS.plugin.quranApi.quranQuoteByCode(code);
 	}
 
 

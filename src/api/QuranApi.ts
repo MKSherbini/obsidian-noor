@@ -14,10 +14,30 @@ export class QuranApi {
 	public async randomQuranQuote() {
 		let surah = this.plugin.randomGenerator.randomInt() % 114 + 1;
 		let ayah = (this.plugin.randomGenerator.randomInt() % surahs[surah - 1].numberOfAyahs);
+
+		return this.fetchQuran(surah, ayah);
+	}
+
+	public async quranQuoteByCode(code: string) {
+		if (!code.match(/^(\d+):(\d+)$/)) {
+			return "Invalid code format. Please use 'Surah:Ayah' format.";
+		}
+
+		let surah = parseInt(code.split(":")[0]);
+		let ayah = parseInt(code.split(":")[1]);
+		if (surah < 1 || surah > 114 || ayah < 1 || ayah > surahs[surah - 1].numberOfAyahs) {
+			return "Invalid surah or ayah number.";
+		}
+
+		return this.fetchQuran(surah, ayah - 1);
+	}
+
+	private async fetchQuran(surah: number, ayah: number) {
 		const [arabicResponse, translationResponse] = await Promise.all([
 			this.fetchData(surah, this.plugin.settings.reciter, ayah),
 			this.fetchData(surah, this.plugin.settings.translationOption, ayah)
 		]);
+
 		return `<audio src="${arabicResponse.ayahs![0].audio}" controls>
 <p> Audio tag not supported </p>
 </audio>
