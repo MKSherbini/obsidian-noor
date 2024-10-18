@@ -19,7 +19,18 @@ export class HadithApi {
 			// hadith = await this.fetchData(this.plugin.settings.hadithLanguage, 4176);
 		} while (hadith == null)
 
+		return this.formatHadith(hadith);
+	}
 
+	public async hadithQuoteByCode(code: string) {
+		let hadith = await this.fetchData(this.plugin.settings.hadithLanguage, +code);
+		if (hadith == null) return 'not found';
+
+		return this.formatHadith(hadith);
+	}
+
+
+	private formatHadith(hadith: Hadith) {
 		return `> [!Quote] [${hadith.grade} - ${hadith.attribution}](https://hadeethenc.com/${this.plugin.settings.hadithLanguage}/browse/hadith/${hadith.id})
 > ${hadith.hadeeth}
 ${this.getMoreSection(hadith)}

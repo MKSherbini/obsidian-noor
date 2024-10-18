@@ -2218,5 +2218,6 @@ export const hadiths: number[] = [
 	65102,
 	65104,
 	65105,
+	66392,
 
 ]

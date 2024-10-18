@@ -29,6 +29,7 @@ export default class NoorPlugin extends Plugin {
 			plugin: this,
 			randomQuranQuote: this.randomQuranQuoteJS,
 			randomHadithQuote: this.randomHadithQuoteJS,
+			hadithQuoteByCode: this.hadithQuoteByCodeJS,
 		}
 
 
@@ -46,6 +47,14 @@ export default class NoorPlugin extends Plugin {
 			name: 'Random Hadith quote',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				EditorUtils.insertInNewLine(editor, await this.hadithApi.randomHadithQuote());
+			}
+		});
+
+		this.addCommand({
+			id: 'hadith-quote-by-code',
+			name: 'Hadith quote by code',
+			editorCallback: async (editor: Editor, view: MarkdownView) => {
+				editor.replaceSelection(await this.hadithApi.hadithQuoteByCode(editor.getSelection()));
 			}
 		});
 
@@ -101,6 +110,9 @@ export default class NoorPlugin extends Plugin {
 		return await window.noorJS.plugin.hadithApi.randomHadithQuote();
 	}
 
+	private async hadithQuoteByCodeJS(code: number) {
+		return await window.noorJS.plugin.hadithApi.hadithQuoteByCode(code);
+	}
 
 	private async randomQuranQuoteJS() {
 		return await window.noorJS.plugin.quranApi.randomQuranQuote();
