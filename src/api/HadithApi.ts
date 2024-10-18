@@ -90,6 +90,6 @@ ${content}
 		if (hadith.explanation == null || hadith.explanation.length == 0) return '';
 
 		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'الشرح' : 'Explanation';
-		return `>> - **${title}**: ${hadith.explanation.replace(/\r\n\r\n/g, '\r\n')}`;
+		return `>> - **${title}**: ${hadith.explanation.replace(/(\r\n\r\n)|(\n\n)/g, '\r\n')}`;
 	}
 }
