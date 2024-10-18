@@ -19,12 +19,10 @@ export class HadithApi {
 			// hadith = await this.fetchData(this.plugin.settings.hadithLanguage, 4176);
 		} while (hadith == null)
 
-		let moreKeyword = this.plugin.settings.hadithLanguage == 'ar' ? 'مزيد' : 'more';
 
-		return `> [!Quote] [${hadith.grade} - ${hadith.attribution}](https://hadeethenc.com/ar/browse/hadith/${hadith.id})
+		return `> [!Quote] [${hadith.grade} - ${hadith.attribution}](https://hadeethenc.com/${this.plugin.settings.hadithLanguage}/browse/hadith/${hadith.id})
 > ${hadith.hadeeth}
-> > [!Quote]+ ${moreKeyword}
-${this.getHadithExplanation(hadith)}${this.getHadithWordMeanings(hadith)}${this.getHadithBenefits(hadith)}
+${this.getMoreSection(hadith)}
 `
 	}
 
@@ -42,6 +40,16 @@ ${this.getHadithExplanation(hadith)}${this.getHadithWordMeanings(hadith)}${this.
 			}).catch(reason => {
 				return null;
 			})
+	}
+
+	private getMoreSection(hadith: Hadith) {
+		let content = `${this.getHadithExplanation(hadith)}${this.getHadithWordMeanings(hadith)}${this.getHadithBenefits(hadith)}`;
+		if (content.length == 0) return '';
+
+		let moreKeyword = this.plugin.settings.hadithLanguage == 'ar' ? 'مزيد' : 'more';
+		return `> > [!Quote]+ ${moreKeyword}
+${content}
+`;
 	}
 
 	private getHadithWordMeanings(hadith: Hadith) {
@@ -68,6 +76,8 @@ ${this.getHadithExplanation(hadith)}${this.getHadithWordMeanings(hadith)}${this.
 	}
 
 	private getHadithExplanation(hadith: Hadith) {
+		if (hadith.explanation == null || hadith.explanation.length == 0) return '';
+
 		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'الشرح' : 'Explanation';
 		return `>> - **${title}**: ${hadith.explanation.replace(/\r\n\r\n/g, '\r\n')}`;
 	}
