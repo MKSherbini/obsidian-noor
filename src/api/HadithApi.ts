@@ -58,7 +58,7 @@ ${this.getMoreSection(hadith)}
 		if (content.length == 0) return '';
 
 		let moreKeyword = this.plugin.settings.hadithLanguage == 'ar' ? 'مزيد' : 'more';
-		return `> > [!Quote]+ ${moreKeyword}
+		return `> > [!Quote]- ${moreKeyword}
 ${content}
 `;
 	}
