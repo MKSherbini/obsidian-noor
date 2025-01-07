@@ -7,6 +7,8 @@ import {languageNames} from "./constants/languages";
 
 export interface NoorPluginSettings {
 	dhikrFilepath: string;
+	audioPosition: string;
+	insertEmptyLineBetweenQuoteAudio: boolean;
 	reciter: string;
 	showTranslation: boolean;
 	translationLanguage: string;
@@ -16,6 +18,8 @@ export interface NoorPluginSettings {
 
 export const DEFAULT_SETTINGS: NoorPluginSettings = {
 	dhikrFilepath: 'dhikr.md',
+	audioPosition: 'audioAbove',
+	insertEmptyLineBetweenQuoteAudio: false,
 	reciter: 'ar.abdulbasitmurattal',
 	showTranslation: true,
 	translationLanguage: 'en',
@@ -70,8 +74,37 @@ export class NoorSettingTab extends PluginSettingTab {
 					})
 			)
 
-		containerEl.createEl('h3', {text: 'Quran Settings'});
+		new Setting(containerEl)
+			.setName('Audio Position Preference')
+			.setDesc('Choose whether audio should appear above or below the quote.')
+			.addDropdown((dropdown) => {
+				dropdown
+					.addOptions({
+						'audioAbove': 'Audio Above Quote',
+						'quoteAbove': 'Quote Above Audio'
+					})
+					.setValue(this.plugin.settings.audioPosition)
+					.onChange(async (value) => {
+						this.plugin.settings.audioPosition = value;
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
 
+		new Setting(containerEl)
+			.setName('Space between Quote and Audio')
+			.setDesc('Add an empty line between the Quran quote and the audio element')
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.insertEmptyLineBetweenQuoteAudio)
+					.onChange(async (value) => {
+						this.plugin.settings.insertEmptyLineBetweenQuoteAudio = value;
+						await this.plugin.saveSettings();
+						this.display();
+					});
+			});
+
+		containerEl.createEl('h3', {text: 'Quran Settings'});
 		new Setting(containerEl)
 			.setName('Reciter')
 			.setDesc('Which reciter voice to use')

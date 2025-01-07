@@ -38,13 +38,29 @@ export class QuranApi {
 			this.fetchData(surah, this.plugin.settings.translationOption, ayah)
 		]);
 
-		return `<audio src="${arabicResponse.ayahs![0].audio}" controls>
-<p> Audio tag not supported </p>
-</audio>
-> [!Quote] ${this.getSurahTitle(arabicResponse)} - [[${arabicResponse.number}:${arabicResponse.ayahs![0].numberInSurah}](https://surahquran.com/english.php?sora=${arabicResponse.number}&aya=${arabicResponse.ayahs![0].numberInSurah})]
+		const qoute = `> [!Quote] ${this.getSurahTitle(arabicResponse)} - [[${arabicResponse.number}:${arabicResponse.ayahs![0].numberInSurah}](https://surahquran.com/english.php?sora=${arabicResponse.number}&aya=${arabicResponse.ayahs![0].numberInSurah})]
 > 
 > ${arabicResponse.ayahs![0].text}${this.getTranslation(translationResponse)}
 `;
+
+		const audio = `<audio src="${arabicResponse.ayahs![0].audio}" controls>
+<p> Audio tag not supported </p>
+</audio>
+`;
+
+		const emptyNewLine = this.plugin.settings.insertEmptyLineBetweenQuoteAudio ? '&nbsp;' : '';
+
+		return this.plugin.settings.audioPosition == "audioAbove"
+			? `${audio}
+
+${emptyNewLine}
+
+${qoute}`
+			: `${qoute}
+
+${emptyNewLine}
+
+${audio}`;
 	}
 
 	private getSurahTitle(arabicResponse: Surah) {
