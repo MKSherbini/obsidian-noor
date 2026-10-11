@@ -1,5 +1,6 @@
 import {surahs} from "../constants/surahs";
 import {Surah} from "../models/Surah";
+import {Ayah} from "../models/Ayah";
 import {requestUrl} from "obsidian";
 import * as url from "url";
 import NoorPlugin from "../main";
@@ -38,12 +39,21 @@ export class QuranApi {
 			this.fetchData(surah, this.plugin.settings.translationOption, ayah)
 		]);
 
-		return `<audio src="${arabicResponse.ayahs![0].audio}" controls>
+		const ayahData = arabicResponse.ayahs![0];
+
+		return `${this.getAudioBlock(ayahData)}> [!Quote] ${this.getSurahTitle(arabicResponse)} - [[${arabicResponse.number}:${ayahData.numberInSurah}](https://surahquran.com/english.php?sora=${arabicResponse.number}&aya=${ayahData.numberInSurah})]
+> 
+> ${ayahData.text}${this.getTranslation(translationResponse)}
+`;
+	}
+
+	private getAudioBlock(ayah: Ayah) {
+		if (!ayah.audio) return '';
+
+		return `<audio src="${ayah.audio}" controls>
 <p> Audio tag not supported </p>
 </audio>
-> [!Quote] ${this.getSurahTitle(arabicResponse)} - [[${arabicResponse.number}:${arabicResponse.ayahs![0].numberInSurah}](https://surahquran.com/english.php?sora=${arabicResponse.number}&aya=${arabicResponse.ayahs![0].numberInSurah})]
-> 
-> ${arabicResponse.ayahs![0].text}${this.getTranslation(translationResponse)}
+
 `;
 	}
 
