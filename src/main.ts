@@ -7,9 +7,21 @@ import {QuranApi} from "./api/QuranApi";
 import {HadithApi} from "./api/HadithApi";
 import {FileUtils} from "./utils/FileUtils";
 
+/**
+ * Global scripting API exposed as `window.noorJS` (e.g. for use from Templater).
+ */
+export interface NoorJS {
+	obsidian: typeof obsidian;
+	plugin: NoorPlugin;
+	randomQuranQuote: () => Promise<string>;
+	quranQuoteByCode: (code: string) => Promise<string>;
+	randomHadithQuote: () => Promise<string>;
+	hadithQuoteByCode: (code: string) => Promise<string>;
+}
+
 declare global {
 	interface Window {
-		noorJS: any;
+		noorJS?: NoorJS;
 	}
 }
 
@@ -116,19 +128,19 @@ export default class NoorPlugin extends Plugin {
 	}
 
 	private async randomHadithQuoteJS() {
-		return await window.noorJS.plugin.hadithApi.randomHadithQuote();
+		return await window.noorJS!.plugin.hadithApi.randomHadithQuote();
 	}
 
 	private async hadithQuoteByCodeJS(code: string) {
-		return await window.noorJS.plugin.hadithApi.hadithQuoteByCode(code);
+		return await window.noorJS!.plugin.hadithApi.hadithQuoteByCode(code);
 	}
 
 	private async randomQuranQuoteJS() {
-		return await window.noorJS.plugin.quranApi.randomQuranQuote();
+		return await window.noorJS!.plugin.quranApi.randomQuranQuote();
 	}
 
 	private async quranQuoteByCodeJS(code: string) {
-		return await window.noorJS.plugin.quranApi.quranQuoteByCode(code);
+		return await window.noorJS!.plugin.quranApi.quranQuoteByCode(code);
 	}
 
 
