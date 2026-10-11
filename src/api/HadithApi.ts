@@ -12,12 +12,17 @@ export class HadithApi {
 	}
 
 	public async randomHadithQuote() {
-		// console.log(hadith)
-		let hadith: null | Hadith;
-		do {
+		const maxAttempts = 30;
+		let hadith: null | Hadith = null;
+
+		for (let attempt = 0; attempt < maxAttempts; attempt++) {
 			hadith = await this.fetchData(this.plugin.settings.hadithLanguage, hadiths[this.plugin.randomGenerator.randomInt() % hadiths.length]);
 			// hadith = await this.fetchData(this.plugin.settings.hadithLanguage, 4176);
-		} while (hadith == null)
+			if (hadith != null) break;
+		}
+
+		if (hadith == null)
+			return 'Failed to fetch a hadith. Please check your connection and try again.';
 
 		return this.formatHadith(hadith);
 	}
