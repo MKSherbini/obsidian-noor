@@ -53,6 +53,24 @@ obsidian plugins complement each other, here are some ideas
 - Enable the plugin in the settings window.
 
 
+## Development
+
+- `npm run dev` builds the plugin in watch mode, and
+- `npm run build` produces a production build.
+
+Both build commands automatically copy `main.js`, `manifest.json`, and `styles.css`
+into `.obsidian/plugins/noor/` of the local test vault located next to this repo
+(`../dev`). Just reload Obsidian (or use the [hot-reload](https://github.com/pjeby/hot-reload)
+plugin) to pick up the changes.
+
+To test against a different vault, set the `OBSIDIAN_VAULT` environment variable to
+the vault path before running the build, for example:
+
+```bash
+OBSIDIAN_VAULT="/path/to/vault" npm run dev
+```
+
+
 ## Attributions
 
 ### AlQuran Cloud APIs

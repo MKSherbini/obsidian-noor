@@ -1,6 +1,9 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import { copyFile, mkdir, readFile, stat } from "fs/promises";
+import { dirname, join, resolve } from "path";
+import { fileURLToPath } from "url";
 
 const banner =
 `/*
@@ -10,6 +13,53 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === "production");
+
+const root = dirname(fileURLToPath(import.meta.url));
+
+// Local Obsidian vault used for manual testing. It lives next to this repo, so
+// the compiled plugin is dropped straight into <vault>/.obsidian/plugins/<id>/
+// on every build (including each rebuild while running `npm run dev`).
+// Override the vault location with the OBSIDIAN_VAULT environment variable.
+const vaultDir = resolve(process.env.OBSIDIAN_VAULT ?? join(root, "..", "dev"));
+const manifest = JSON.parse(await readFile(join(root, "manifest.json"), "utf8"));
+const pluginDir = join(vaultDir, ".obsidian", "plugins", manifest.id);
+
+// Files Obsidian needs to load the plugin locally.
+const buildFiles = ["main.js", "manifest.json", "styles.css"];
+
+async function exists(path) {
+	try {
+		await stat(path);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+async function copyToVault() {
+	if (!await exists(join(vaultDir, ".obsidian"))) {
+		console.log(`[copy] Skipping: no Obsidian vault found at ${vaultDir}`);
+		return;
+	}
+
+	await mkdir(pluginDir, { recursive: true });
+	for (const file of buildFiles) {
+		const source = join(root, file);
+		if (!await exists(source)) continue;
+		await copyFile(source, join(pluginDir, file));
+	}
+	console.log(`[copy] Copied build to ${pluginDir}`);
+}
+
+const copyToVaultPlugin = {
+	name: "copy-to-vault",
+	setup(build) {
+		build.onEnd(async (result) => {
+			if (result.errors.length > 0) return;
+			await copyToVault();
+		});
+	},
+};
 
 const context = await esbuild.context({
 	banner: {
@@ -39,6 +89,7 @@ const context = await esbuild.context({
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
 	outfile: "main.js",
+	plugins: [copyToVaultPlugin],
 });
 
 if (prod) {
