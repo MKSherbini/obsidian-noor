@@ -70,6 +70,16 @@ the vault path before running the build, for example:
 OBSIDIAN_VAULT="/path/to/vault" npm run dev
 ```
 
+### Releasing
+
+Releases are automated via [GitHub Actions](.github/workflows/release.yml): pushing a tag
+builds the plugin and attaches `main.js`, `manifest.json`, and `styles.css` to the release.
+
+```bash
+npm version patch -m "release version %s"   # bumps package.json + manifest.json/versions.json, commits and tags
+git push && git push --tags
+```
+
 
 ## Attributions
 
