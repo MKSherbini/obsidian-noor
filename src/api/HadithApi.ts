@@ -3,6 +3,7 @@ import NoorPlugin from "../main";
 import type {RequestUrlResponse} from "obsidian";
 import {hadiths} from "../constants/hadiths";
 import {Logger} from "../utils/Logger";
+import {MarkdownUtils} from "../utils/MarkdownUtils";
 import {RequestUtils} from "../utils/RequestUtils";
 
 export class HadithApi {
@@ -43,7 +44,7 @@ export class HadithApi {
 
 	private formatHadith(hadith: Hadith) {
 		return `> [!Quote] [${hadith.grade} - ${hadith.attribution}](https://hadeethenc.com/${this.plugin.settings.hadithLanguage}/browse/hadith/${hadith.id})
-> ${hadith.hadeeth}
+${MarkdownUtils.blockquote(hadith.hadeeth)}
 ${this.getMoreSection(hadith)}
 `
 	}
@@ -72,7 +73,9 @@ ${this.getMoreSection(hadith)}
 	}
 
 	private getMoreSection(hadith: Hadith) {
-		let content = `${this.getHadithExplanation(hadith)}${this.getHadithWordMeanings(hadith)}${this.getHadithBenefits(hadith)}`;
+		const content = [this.getHadithExplanation(hadith), this.getHadithWordMeanings(hadith), this.getHadithBenefits(hadith)]
+			.filter(section => section.length > 0)
+			.join('\n');
 		if (content.length == 0) return '';
 
 		let moreKeyword = this.plugin.settings.hadithLanguage == 'ar' ? 'مزيد' : 'more';
@@ -84,30 +87,24 @@ ${content}
 	private getHadithWordMeanings(hadith: Hadith) {
 		if (hadith.words_meanings == null || hadith.words_meanings.length == 0) return '';
 		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'معاني الكلمات' : "Word meanings";
-		return `
->> - **${title}**:
-` + hadith.words_meanings
-			.map(line => {
-				return `>>     - **${line.word}**: ${line.meaning}`
-			}).join('\n');
+		const items = hadith.words_meanings.map(line => `**${line.word}**: ${line.meaning ?? ''}`);
+		return MarkdownUtils.section(title, MarkdownUtils.bulletList(items, 2, 1), 2);
 	}
 
 	private getHadithBenefits(hadith: Hadith) {
-		if (hadith.hints == null || hadith.hints.length == 0) return '';
+		const items = (hadith.hints ?? [])
+			.map(line => line.trim())
+			.filter(line => line.length > 0);
+		if (items.length == 0) return '';
+
 		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'من فوائد الحديث' : 'Benefits';
-		return `
->> - **${title}**:
-` + hadith.hints
-			.filter(line => line.trim().length > 0)
-			.map(line => {
-				return `>>     - ${line.replace("\r", "")}`
-			}).join('\n');
+		return MarkdownUtils.section(title, MarkdownUtils.bulletList(items, 2, 1), 2);
 	}
 
 	private getHadithExplanation(hadith: Hadith) {
 		if (hadith.explanation == null || hadith.explanation.length == 0) return '';
 
 		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'الشرح' : 'Explanation';
-		return `>> - **${title}**: ${hadith.explanation.replace(/(\r\n\r\n)|(\n\n)/g, '\r\n')}`;
+		return MarkdownUtils.section(title, MarkdownUtils.blockquote(hadith.explanation, 2), 2);
 	}
 }
