@@ -14,10 +14,13 @@ export class QuranApi {
 	}
 
 	public async randomQuranQuote() {
-		let surah = this.plugin.randomGenerator.randomInt() % 114 + 1;
-		let ayah = (this.plugin.randomGenerator.randomInt() % surahs[surah - 1].numberOfAyahs);
+		const surahNumber = this.plugin.randomGenerator.randomInt() % surahs.length + 1;
+		const surah = surahs[surahNumber - 1];
+		if (surah == null) throw new Error('Could not select a random surah.');
 
-		return this.fetchQuran(surah, ayah);
+		const ayah = this.plugin.randomGenerator.randomInt() % surah.numberOfAyahs;
+
+		return this.fetchQuran(surahNumber, ayah);
 	}
 
 	public async quranQuoteByCode(code: string) {
@@ -26,9 +29,10 @@ export class QuranApi {
 			throw new Error("Invalid code format. Please use 'Surah:Ayah', for example 2:255.");
 		}
 
-		let surah = parseInt(match[1]);
-		let ayah = parseInt(match[2]);
-		if (surah < 1 || surah > 114 || ayah < 1 || ayah > surahs[surah - 1].numberOfAyahs) {
+		const surah = Number.parseInt(match[1] ?? '', 10);
+		const ayah = Number.parseInt(match[2] ?? '', 10);
+		const surahInfo = surahs[surah - 1];
+		if (surah < 1 || surah > surahs.length || ayah < 1 || ayah > (surahInfo?.numberOfAyahs ?? 0)) {
 			throw new Error(`Ayah ${surah}:${ayah} does not exist.`);
 		}
 
@@ -64,9 +68,9 @@ export class QuranApi {
 	}
 
 	private getSurahTitle(arabicResponse: Surah) {
-		let arabicRevelation = arabicResponse.revelationType == 'Meccan' ? 'مكية' : 'مدنية';
-		let revelationLocation = this.plugin.settings.showTranslation ? arabicResponse.revelationType : arabicRevelation;
-		let surahName = this.plugin.settings.showTranslation ? arabicResponse.englishName : arabicResponse.name;
+		const arabicRevelation = arabicResponse.revelationType == 'Meccan' ? 'مكية' : 'مدنية';
+		const revelationLocation = this.plugin.settings.showTranslation ? arabicResponse.revelationType : arabicRevelation;
+		const surahName = this.plugin.settings.showTranslation ? arabicResponse.englishName : arabicResponse.name;
 		return `${surahName} "${revelationLocation}"`;
 	}
 
@@ -100,20 +104,20 @@ export class QuranApi {
 			response = await RequestUtils.requestUrlWithTimeout(url);
 		} catch (error) {
 			Logger.error('Quran API request failed', error);
-			throw new Error('Could not reach the Quran API. Please check your connection and settings.');
+			throw new Error('Could not reach the Quran API. Please check your connection and settings.', { cause: error });
 		}
 
 		// The API wraps responses as { code, status, data } and can return HTTP 200 for
 		// errors, so the body code has to be checked in addition to the HTTP status.
-		const body = response.json;
+		const body = response.json as { code?: unknown; data?: T } | null;
 		const apiCode = (body && typeof body.code === 'number') ? body.code : response.status;
 		if (response.status !== 200 || apiCode !== 200) {
 			throw new Error(`The Quran API returned an error (code ${apiCode}). Please try again later.`);
 		}
-		if (body?.data == null) {
+		if (body == null || body.data == null) {
 			throw new Error('The Quran API returned an unexpected response. Please try again later.');
 		}
 
-		return body.data as T;
+		return body.data;
 	}
 }

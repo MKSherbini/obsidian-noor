@@ -18,7 +18,10 @@ export class HadithApi {
 		let hadith: null | Hadith = null;
 
 		for (let attempt = 0; attempt < maxAttempts; attempt++) {
-			hadith = await this.fetchData(this.plugin.settings.hadithLanguage, hadiths[this.plugin.randomGenerator.randomInt() % hadiths.length]);
+			const id = hadiths[this.plugin.randomGenerator.randomInt() % hadiths.length];
+			if (id == null) continue;
+
+			hadith = await this.fetchData(this.plugin.settings.hadithLanguage, id);
 			if (hadith != null) break;
 		}
 
@@ -34,7 +37,7 @@ export class HadithApi {
 			throw new Error("Invalid Hadith code. Please provide a numeric Hadith id.");
 		}
 
-		let hadith = await this.fetchData(this.plugin.settings.hadithLanguage, +id);
+		const hadith = await this.fetchData(this.plugin.settings.hadithLanguage, +id);
 		if (hadith == null)
 			throw new Error(`Hadith ${id} was not found in the selected language.`);
 
@@ -59,7 +62,7 @@ ${this.getMoreSection(hadith)}
 			response = await RequestUtils.requestUrlWithTimeout(url);
 		} catch (error) {
 			Logger.error('Hadith API request failed', error);
-			throw new Error('Could not reach the Hadith API. Please check your connection and settings.');
+			throw new Error('Could not reach the Hadith API. Please check your connection and settings.', { cause: error });
 		}
 
 		// A 404 just means this id/language has no hadith (used to retry with another random id);
@@ -78,7 +81,7 @@ ${this.getMoreSection(hadith)}
 			.join('\n');
 		if (content.length == 0) return '';
 
-		let moreKeyword = this.plugin.settings.hadithLanguage == 'ar' ? 'مزيد' : 'more';
+		const moreKeyword = this.plugin.settings.hadithLanguage == 'ar' ? 'مزيد' : 'more';
 		return `> > [!Quote]+ ${moreKeyword}
 ${content}
 `;
@@ -86,7 +89,7 @@ ${content}
 
 	private getHadithWordMeanings(hadith: Hadith) {
 		if (hadith.words_meanings == null || hadith.words_meanings.length == 0) return '';
-		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'معاني الكلمات' : "Word meanings";
+		const title = this.plugin.settings.hadithLanguage == 'ar' ? 'معاني الكلمات' : "Word meanings";
 		const items = hadith.words_meanings.map(line => `**${line.word}**: ${line.meaning ?? ''}`);
 		return MarkdownUtils.section(title, MarkdownUtils.bulletList(items, 2, 1), 2);
 	}
@@ -97,14 +100,14 @@ ${content}
 			.filter(line => line.length > 0);
 		if (items.length == 0) return '';
 
-		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'من فوائد الحديث' : 'Benefits';
+		const title = this.plugin.settings.hadithLanguage == 'ar' ? 'من فوائد الحديث' : 'Benefits';
 		return MarkdownUtils.section(title, MarkdownUtils.bulletList(items, 2, 1), 2);
 	}
 
 	private getHadithExplanation(hadith: Hadith) {
 		if (hadith.explanation == null || hadith.explanation.length == 0) return '';
 
-		let title = this.plugin.settings.hadithLanguage == 'ar' ? 'الشرح' : 'Explanation';
+		const title = this.plugin.settings.hadithLanguage == 'ar' ? 'الشرح' : 'Explanation';
 		return MarkdownUtils.section(title, MarkdownUtils.blockquote(hadith.explanation, 2), 2);
 	}
 }

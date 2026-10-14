@@ -1,5 +1,5 @@
 import * as obsidian from 'obsidian';
-import {Editor, MarkdownView, Notice, Plugin} from 'obsidian';
+import {Editor, normalizePath, Notice, Plugin, TFile, TFolder} from 'obsidian';
 import {MersenneTwister} from './utils/mersenne-twister'
 import {DEFAULT_SETTINGS, NoorPluginSettings, NoorSettingTab} from './settings'
 import {EditorUtils} from "./utils/EditorUtils";
@@ -27,10 +27,10 @@ declare global {
 }
 
 export default class NoorPlugin extends Plugin {
-	settings: NoorPluginSettings;
+	settings!: NoorPluginSettings;
 	randomGenerator = new MersenneTwister();
-	quranApi: QuranApi;
-	hadithApi: HadithApi;
+	quranApi!: QuranApi;
+	hadithApi!: HadithApi;
 
 	async onload() {
 		await this.loadSettings();
@@ -40,18 +40,18 @@ export default class NoorPlugin extends Plugin {
 		window.noorJS = {
 			obsidian,
 			plugin: this,
-			randomQuranQuote: this.randomQuranQuoteJS,
-			quranQuoteByCode: this.quranQuoteByCodeJS,
-			randomHadithQuote: this.randomHadithQuoteJS,
-			hadithQuoteByCode: this.hadithQuoteByCodeJS,
+			randomQuranQuote: () => this.randomQuranQuoteJS(),
+			quranQuoteByCode: (code: string) => this.quranQuoteByCodeJS(code),
+			randomHadithQuote: () => this.randomHadithQuoteJS(),
+			hadithQuoteByCode: (code: string) => this.hadithQuoteByCodeJS(code),
 		}
 
 
 		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
 			id: 'random-quran-quote',
-			name: 'Random Quran quote',
-			editorCallback: async (editor: Editor, view: MarkdownView) => {
+			name: 'Random quran quote',
+			editorCallback: async (editor: Editor) => {
 				await this.runCommand(async () => {
 					EditorUtils.insertBlock(editor, await this.quranApi.randomQuranQuote());
 				});
@@ -61,7 +61,7 @@ export default class NoorPlugin extends Plugin {
 		this.addCommand({
 			id: 'quran-quote-by-code',
 			name: 'Quran quote by code',
-			editorCallback: async (editor: Editor, view: MarkdownView) => {
+			editorCallback: async (editor: Editor) => {
 				await this.runCommand(async () => {
 					EditorUtils.insertBlock(editor, await this.quranApi.quranQuoteByCode(editor.getSelection()));
 				});
@@ -70,8 +70,8 @@ export default class NoorPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'random-hadith-quote',
-			name: 'Random Hadith quote',
-			editorCallback: async (editor: Editor, view: MarkdownView) => {
+			name: 'Random hadith quote',
+			editorCallback: async (editor: Editor) => {
 				await this.runCommand(async () => {
 					EditorUtils.insertBlock(editor, await this.hadithApi.randomHadithQuote());
 				});
@@ -81,7 +81,7 @@ export default class NoorPlugin extends Plugin {
 		this.addCommand({
 			id: 'hadith-quote-by-code',
 			name: 'Hadith quote by code',
-			editorCallback: async (editor: Editor, view: MarkdownView) => {
+			editorCallback: async (editor: Editor) => {
 				await this.runCommand(async () => {
 					EditorUtils.insertBlock(editor, await this.hadithApi.hadithQuoteByCode(editor.getSelection()));
 				});
@@ -90,13 +90,13 @@ export default class NoorPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'open-dhikr-file',
-			name: 'Open Dhikr file',
+			name: 'Open dhikr file',
 			callback: async () => await this.runCommand(() => this.openDhikrFile(false))
 		});
 
 		this.addCommand({
 			id: 'open-dhikr-file-popup',
-			name: 'Open Dhikr file popup',
+			name: 'Open dhikr file popup',
 			callback: async () => await this.runCommand(() => this.openDhikrFile(true))
 		});
 
@@ -128,21 +128,22 @@ export default class NoorPlugin extends Plugin {
 	}
 
 	private async openDhikrFile(popup: boolean) {
-		let [quranQuote, hadithQuote] =
+		const [quranQuote, hadithQuote] =
 			await Promise.all([this.randomQuranQuoteJS(), this.randomHadithQuoteJS()]);
-		let content = "\n" + quranQuote + "\n" + hadithQuote;
+		const content = "\n" + quranQuote + "\n" + hadithQuote;
 
-		let dhikrFile = this.app.vault.getFileByPath(this.settings.dhikrFilepath);
-		if (dhikrFile != null) {
+		const target = this.app.vault.getAbstractFileByPath(this.settings.dhikrFilepath);
+		let dhikrFile: TFile;
+		if (target instanceof TFile) {
 			// Update in place so a failed write can never destroy the existing note.
-			await this.app.vault.modify(dhikrFile, content);
+			await this.app.vault.modify(target, content);
+			dhikrFile = target;
 		} else {
-			let lastSlashIdx = this.settings.dhikrFilepath.lastIndexOf('/');
+			const lastSlashIdx = this.settings.dhikrFilepath.lastIndexOf('/');
 			if (lastSlashIdx != -1) {
-				let path = this.settings.dhikrFilepath.slice(0, lastSlashIdx);
-				let folder = this.app.vault.getFolderByPath(path);
-				if (folder == null)
-					await this.app.vault.createFolder(path)
+				const folderPath = this.settings.dhikrFilepath.slice(0, lastSlashIdx);
+				if (!(this.app.vault.getAbstractFileByPath(folderPath) instanceof TFolder))
+					await this.app.vault.adapter.mkdir(normalizePath(folderPath));
 			}
 
 			dhikrFile = await this.app.vault.create(this.settings.dhikrFilepath, content);
@@ -175,7 +176,7 @@ export default class NoorPlugin extends Plugin {
 	async loadSettings() {
 		let data: Partial<NoorPluginSettings> | null = null;
 		try {
-			data = await this.loadData();
+			data = (await this.loadData()) as Partial<NoorPluginSettings> | null;
 		} catch (error) {
 			Logger.error('Failed to load settings, using defaults', error);
 			new Notice('Noor: Could not load the saved settings, using defaults instead.');

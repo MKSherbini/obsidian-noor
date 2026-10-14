@@ -6,7 +6,7 @@ export interface Hadith {
 	grade: string
 	explanation: string
 	hints: Array<string>
-	categories: Array<any>
+	categories: Array<unknown>
 	translations: Array<string>
 	words_meanings?: Array<{
 		word: string

@@ -26,9 +26,9 @@ export const DEFAULT_SETTINGS: NoorPluginSettings = {
 
 export class NoorSettingTab extends PluginSettingTab {
 	plugin: NoorPlugin;
-	reciterOptions: { [key: string]: any } = {};
+	reciterOptions: Record<string, string> = {};
 	translationLanguagesOptions: { [key: string]: string } = {};
-	translationOptionsMap = new Map<string, { [key: string]: any }>();
+	translationOptionsMap = new Map<string, Record<string, string>>();
 
 	constructor(app: App, plugin: NoorPlugin) {
 		super(app, plugin);
@@ -41,7 +41,7 @@ export class NoorSettingTab extends PluginSettingTab {
 			this.reciterOptions[reciter.identifier] = reciter.englishName;
 		})
 		translations.forEach(translation => {
-			let languageName = languageNames.get(translation.language);
+			const languageName = languageNames.get(translation.language);
 			if (languageName != void 0)
 				this.translationLanguagesOptions[translation.language] = languageName;
 			if (!this.translationOptionsMap.has(translation.language)) this.translationOptionsMap.set(translation.language, {});
@@ -55,11 +55,11 @@ export class NoorSettingTab extends PluginSettingTab {
 		const {containerEl} = this;
 
 		containerEl.empty();
-		containerEl.createEl('h3', {text: 'General Settings'});
+		new Setting(containerEl).setName('Dhikr file').setHeading();
 
 		new Setting(containerEl)
 			.setName("Dhikr file path")
-			.setDesc("where to create the Dhikr note")
+			.setDesc("Where to create the dhikr note")
 			.addText(text =>
 				text
 					.setValue(this.plugin.settings.dhikrFilepath)
@@ -69,7 +69,7 @@ export class NoorSettingTab extends PluginSettingTab {
 					})
 			)
 
-		containerEl.createEl('h3', {text: 'Quran Settings'});
+		new Setting(containerEl).setName('Quran').setHeading();
 
 		new Setting(containerEl)
 			.setName('Reciter')
@@ -107,7 +107,8 @@ export class NoorSettingTab extends PluginSettingTab {
 						.setValue(this.plugin.settings.translationLanguage)
 						.onChange(async (value) => {
 							this.plugin.settings.translationLanguage = value
-							this.plugin.settings.translationOption = Object.keys(this.translationOptionsMap.get(this.plugin.settings.translationLanguage)!)[0];
+							const options = Object.keys(this.translationOptionsMap.get(this.plugin.settings.translationLanguage) ?? {});
+							this.plugin.settings.translationOption = options[0] ?? '';
 							await this.plugin.saveSettings();
 							this.display();
 						});
@@ -130,7 +131,7 @@ export class NoorSettingTab extends PluginSettingTab {
 
 
 		containerEl.createEl("br");
-		containerEl.createEl('h3', {text: 'Hadith Settings'});
+		new Setting(containerEl).setName('Hadith').setHeading();
 
 		new Setting(containerEl)
 			.setName('Hadith language')
