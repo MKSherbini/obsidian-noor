@@ -36,7 +36,6 @@ export class NoorSettingTab extends PluginSettingTab {
 
 		reciters.sort((a, b) => a.identifier.localeCompare(b.identifier));
 		translations.sort((a, b) => a.identifier.localeCompare(b.identifier));
-		// translations.sort((a, b) => a.identifier > b.identifier ? 1 : -1);
 
 		reciters.forEach(reciter => {
 			this.reciterOptions[reciter.identifier] = reciter.englishName;
@@ -114,12 +113,13 @@ export class NoorSettingTab extends PluginSettingTab {
 						});
 				});
 
+			const translationOptions = this.translationOptionsMap.get(this.plugin.settings.translationLanguage) ?? {};
 			new Setting(containerEl)
 				.setName('Translation options')
 				.setDesc('Which translation to use')
-				.addDropdown(async (dropdown) => {
+				.addDropdown((dropdown) => {
 					dropdown
-						.addOptions(this.translationOptionsMap.get(this.plugin.settings.translationLanguage)!)
+						.addOptions(translationOptions)
 						.setValue(this.plugin.settings.translationOption)
 						.onChange(async (value) => {
 							this.plugin.settings.translationOption = value

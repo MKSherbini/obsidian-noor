@@ -1,8 +1,9 @@
 import {Hadith} from "../models/Hadith";
 import NoorPlugin from "../main";
-import {Surah} from "../models/Surah";
-import {requestUrl} from "obsidian";
+import type {RequestUrlResponse} from "obsidian";
 import {hadiths} from "../constants/hadiths";
+import {Logger} from "../utils/Logger";
+import {RequestUtils} from "../utils/RequestUtils";
 
 export class HadithApi {
 	private plugin: NoorPlugin;
@@ -17,19 +18,24 @@ export class HadithApi {
 
 		for (let attempt = 0; attempt < maxAttempts; attempt++) {
 			hadith = await this.fetchData(this.plugin.settings.hadithLanguage, hadiths[this.plugin.randomGenerator.randomInt() % hadiths.length]);
-			// hadith = await this.fetchData(this.plugin.settings.hadithLanguage, 4176);
 			if (hadith != null) break;
 		}
 
 		if (hadith == null)
-			return 'Failed to fetch a hadith. Please check your connection and try again.';
+			throw new Error('Could not find a Hadith to display. Please try again.');
 
 		return this.formatHadith(hadith);
 	}
 
 	public async hadithQuoteByCode(code: string) {
-		let hadith = await this.fetchData(this.plugin.settings.hadithLanguage, +code);
-		if (hadith == null) return 'Not found.';
+		const id = code.trim();
+		if (!/^\d+$/.test(id)) {
+			throw new Error("Invalid Hadith code. Please provide a numeric Hadith id.");
+		}
+
+		let hadith = await this.fetchData(this.plugin.settings.hadithLanguage, +id);
+		if (hadith == null)
+			throw new Error(`Hadith ${id} was not found in the selected language.`);
 
 		return this.formatHadith(hadith);
 	}
@@ -46,16 +52,23 @@ ${this.getMoreSection(hadith)}
 		return this.callApi<Hadith>(`https://hadeethenc.com/api/v1/hadeeths/one/?language=${language}&id=${id}`);
 	}
 
-	callApi<T>(url: string): Promise<null | T> {
-		return requestUrl(url)
-			.then(response => {
-				if (response.status !== 200) {
-					return null;
-				}
-				return response.json as Promise<T>
-			}).catch(reason => {
-				return null;
-			})
+	async callApi<T>(url: string): Promise<null | T> {
+		let response: RequestUrlResponse;
+		try {
+			response = await RequestUtils.requestUrlWithTimeout(url);
+		} catch (error) {
+			Logger.error('Hadith API request failed', error);
+			throw new Error('Could not reach the Hadith API. Please check your connection and settings.');
+		}
+
+		// A 404 just means this id/language has no hadith (used to retry with another random id);
+		// any other failure is a real error and must be surfaced.
+		if (response.status === 404) return null;
+		if (response.status !== 200) {
+			throw new Error(`The Hadith API returned an error (status ${response.status}). Please try again later.`);
+		}
+
+		return response.json as T;
 	}
 
 	private getMoreSection(hadith: Hadith) {
