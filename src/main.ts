@@ -53,7 +53,7 @@ export default class NoorPlugin extends Plugin {
 			name: 'Random Quran quote',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				await this.runCommand(async () => {
-					EditorUtils.insertInNewLine(editor, await this.quranApi.randomQuranQuote());
+					EditorUtils.insertBlock(editor, await this.quranApi.randomQuranQuote());
 				});
 			}
 		});
@@ -63,7 +63,7 @@ export default class NoorPlugin extends Plugin {
 			name: 'Quran quote by code',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				await this.runCommand(async () => {
-					editor.replaceSelection(await this.quranApi.quranQuoteByCode(editor.getSelection()));
+					EditorUtils.insertBlock(editor, await this.quranApi.quranQuoteByCode(editor.getSelection()));
 				});
 			}
 		});
@@ -73,7 +73,7 @@ export default class NoorPlugin extends Plugin {
 			name: 'Random Hadith quote',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				await this.runCommand(async () => {
-					EditorUtils.insertInNewLine(editor, await this.hadithApi.randomHadithQuote());
+					EditorUtils.insertBlock(editor, await this.hadithApi.randomHadithQuote());
 				});
 			}
 		});
@@ -83,7 +83,7 @@ export default class NoorPlugin extends Plugin {
 			name: 'Hadith quote by code',
 			editorCallback: async (editor: Editor, view: MarkdownView) => {
 				await this.runCommand(async () => {
-					editor.replaceSelection(await this.hadithApi.hadithQuoteByCode(editor.getSelection()));
+					EditorUtils.insertBlock(editor, await this.hadithApi.hadithQuoteByCode(editor.getSelection()));
 				});
 			}
 		});
