@@ -1,6 +1,7 @@
 import {surahs} from "../constants/surahs";
 import {Surah} from "../models/Surah";
 import {Ayah} from "../models/Ayah";
+import type {QuranSearchMatch} from "../models/QuranSearchMatch";
 import type {RequestUrlResponse} from "obsidian";
 import NoorPlugin from "../main";
 import {Logger} from "../utils/Logger";
@@ -99,25 +100,49 @@ export class QuranApi {
 	}
 
 	async callApi<T>(url: string): Promise<T> {
-		let response: RequestUrlResponse;
-		try {
-			response = await RequestUtils.requestUrlWithTimeout(url);
-		} catch (error) {
-			Logger.error('Quran API request failed', error);
-			throw new Error('Could not reach the Quran API. Please check your connection and settings.', { cause: error });
-		}
+		const response = await this.request(url);
 
 		// The API wraps responses as { code, status, data } and can return HTTP 200 for
 		// errors, so the body code has to be checked in addition to the HTTP status.
 		const body = response.json as { code?: unknown; data?: T } | null;
 		const apiCode = (body && typeof body.code === 'number') ? body.code : response.status;
 		if (response.status !== 200 || apiCode !== 200) {
-			throw new Error(`The Quran API returned an error (code ${apiCode}). Please try again later.`);
+			Logger.error('Unexpected Quran API response', { status: response.status, code: apiCode, url });
+			throw new Error('The Quran API is not responding as expected. Please try again later.');
 		}
 		if (body == null || body.data == null) {
 			throw new Error('The Quran API returned an unexpected response. Please try again later.');
 		}
 
 		return body.data;
+	}
+
+	/** Search an edition for a keyword. A 404 means "no match" and yields an empty list. */
+	public async search(query: string, edition: string, limit: number): Promise<QuranSearchMatch[]> {
+		const keyword = query.trim();
+		if (keyword.length === 0) return [];
+
+		const url = `https://api.alquran.cloud/v1/search/${encodeURIComponent(keyword)}/all/${edition}?limit=${limit}`;
+		const response = await this.request(url);
+
+		const body = response.json as { code?: unknown; data?: { matches?: QuranSearchMatch[] } } | null;
+		// "No match" comes back as 404, either as the HTTP status or as the body code.
+		const apiCode = (body && typeof body.code === 'number') ? body.code : response.status;
+		if (apiCode === 404) return [];
+		if (response.status !== 200 || apiCode !== 200) {
+			Logger.error('Unexpected Quran API response', { status: response.status, code: apiCode, url });
+			throw new Error('The Quran API is not responding as expected. Please try again later.');
+		}
+
+		return body?.data?.matches ?? [];
+	}
+
+	private async request(url: string): Promise<RequestUrlResponse> {
+		try {
+			return await RequestUtils.requestUrlWithTimeout(url);
+		} catch (error) {
+			Logger.error('Quran API request failed', error);
+			throw new Error('Could not reach the Quran API. Please check your connection and try again.', { cause: error });
+		}
 	}
 }

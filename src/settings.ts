@@ -2,7 +2,6 @@ import {App, PluginSettingTab, Setting} from 'obsidian';
 import NoorPlugin from "./main";
 import {reciters} from "./constants/reciters";
 import {translations} from "./constants/translations";
-import {hadithLanguages} from "./constants/hadiths";
 import {languageNames} from "./constants/languages";
 
 export interface NoorPluginSettings {
@@ -12,6 +11,7 @@ export interface NoorPluginSettings {
 	translationLanguage: string;
 	translationOption: string;
 	hadithLanguage: string;
+	searchResultLimit: number;
 }
 
 export const DEFAULT_SETTINGS: NoorPluginSettings = {
@@ -20,7 +20,8 @@ export const DEFAULT_SETTINGS: NoorPluginSettings = {
 	showTranslation: true,
 	translationLanguage: 'en',
 	translationOption: 'en.ahmedali',
-	hadithLanguage: 'ar'
+	hadithLanguage: 'ar',
+	searchResultLimit: 20
 }
 
 
@@ -133,15 +134,45 @@ export class NoorSettingTab extends PluginSettingTab {
 		containerEl.createEl("br");
 		new Setting(containerEl).setName('Hadith').setHeading();
 
+		const hadithLanguageOptions: Record<string, string> = {};
+		for (const language of this.plugin.hadithLanguages) {
+			hadithLanguageOptions[language.code] = language.native;
+		}
+		// The list is fetched on start; until it arrives, keep at least the selected language.
+		const currentHadithLanguage = this.plugin.settings.hadithLanguage;
+		if (hadithLanguageOptions[currentHadithLanguage] == null) {
+			hadithLanguageOptions[currentHadithLanguage] = currentHadithLanguage;
+		}
+
 		new Setting(containerEl)
 			.setName('Hadith language')
 			.setDesc('Which hadith language to use')
 			.addDropdown((dropdown) => {
 				dropdown
-					.addOptions(hadithLanguages)
+					.addOptions(hadithLanguageOptions)
 					.setValue(this.plugin.settings.hadithLanguage)
 					.onChange(async (value) => {
 						this.plugin.settings.hadithLanguage = value
+						await this.plugin.saveSettings();
+					});
+			});
+
+		containerEl.createEl("br");
+		new Setting(containerEl).setName('Search').setHeading();
+
+		new Setting(containerEl)
+			.setName('Search results')
+			.setDesc('How many results to show (1-100)')
+			.addText((text) => {
+				text.inputEl.type = 'number';
+				text.inputEl.min = '1';
+				text.inputEl.max = '100';
+				text
+					.setValue(String(this.plugin.settings.searchResultLimit))
+					.onChange(async (value) => {
+						const limit = Number.parseInt(value, 10);
+						if (Number.isNaN(limit)) return;
+						this.plugin.settings.searchResultLimit = Math.min(100, Math.max(1, limit));
 						await this.plugin.saveSettings();
 					});
 			});

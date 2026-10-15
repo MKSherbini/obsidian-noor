@@ -1,4 +1,6 @@
 import {Hadith} from "../models/Hadith";
+import type {HadithLanguage} from "../models/HadithLanguage";
+import type {HadithSearchResult} from "../models/HadithSearchResult";
 import NoorPlugin from "../main";
 import type {RequestUrlResponse} from "obsidian";
 import {hadiths} from "../constants/hadiths";
@@ -57,22 +59,49 @@ ${this.getMoreSection(hadith)}
 	}
 
 	async callApi<T>(url: string): Promise<null | T> {
-		let response: RequestUrlResponse;
-		try {
-			response = await RequestUtils.requestUrlWithTimeout(url);
-		} catch (error) {
-			Logger.error('Hadith API request failed', error);
-			throw new Error('Could not reach the Hadith API. Please check your connection and settings.', { cause: error });
-		}
+		const response = await this.request(url);
 
 		// A 404 just means this id/language has no hadith (used to retry with another random id);
 		// any other failure is a real error and must be surfaced.
 		if (response.status === 404) return null;
 		if (response.status !== 200) {
-			throw new Error(`The Hadith API returned an error (status ${response.status}). Please try again later.`);
+			Logger.error('Unexpected Hadith API status', { status: response.status, url });
+			throw new Error('The Hadith API is not responding as expected. Please try again later.');
 		}
 
 		return response.json as T;
+	}
+
+	/** The languages the API serves, each named in its own language. */
+	public async languages(): Promise<HadithLanguage[] | null> {
+		return await this.callApi<HadithLanguage[]>('https://hadeethenc.com/api/v1/languages/');
+	}
+
+	/** Search by phrase. A 404 or 204 means "no match" and yields an empty list. */
+	public async search(query: string, language: string, limit: number): Promise<HadithSearchResult[]> {
+		const phrase = query.trim();
+		if (phrase.length === 0) return [];
+
+		const url = `https://hadeethenc.com/api/v1/hadeeths/search/?language=${encodeURIComponent(language)}&phrase=${encodeURIComponent(phrase)}&page=1&per_page=${limit}`;
+		const response = await this.request(url);
+		if (response.status === 404 || response.status === 204) return [];
+		if (response.status !== 200) {
+			Logger.error('Unexpected Hadith API status', { status: response.status, url });
+			throw new Error('The Hadith API is not responding as expected. Please try again later.');
+		}
+
+		const results = Array.isArray(response.json) ? response.json as HadithSearchResult[] : [];
+		// The endpoint ignores `per_page`/`page` and always returns the first ~100 matches.
+		return results.slice(0, limit);
+	}
+
+	private async request(url: string): Promise<RequestUrlResponse> {
+		try {
+			return await RequestUtils.requestUrlWithTimeout(url);
+		} catch (error) {
+			Logger.error('Hadith API request failed', error);
+			throw new Error('Could not reach the Hadith API. Please check your connection and try again.', { cause: error });
+		}
 	}
 
 	private getMoreSection(hadith: Hadith) {

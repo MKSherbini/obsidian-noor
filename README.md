@@ -10,6 +10,7 @@
 - Insert a **Quran Quote** at the current location containing a random verse with recitation in Arabic, chosen translation language, and a hyperlink for more info.
 - Insert a **Hadith Quote** at the current location containing a random hadith in the chosen language and a hyperlink for more info.
 - Create a **Dhikr file** at the configured location containing a **Quran Quote** and a **Hadith Quote** (can be used again to update file with new quotes)
+- **Search** the Quran or the Hadith collection and act on the exact quote you pick: insert it, or write only that quote to the Dhikr file.
 
 ## Usage
 After enabling the plugin in the settings menu, you should see the added commands and the `noorJS` object.
@@ -19,9 +20,13 @@ After enabling the plugin in the settings menu, you should see the added command
   - `Noor: Random Hadith quote`: inserts a quote block at the current editor location containing a **Hadith Quote**
   - `Noor: Open Dhikr file`: creates a **Dhikr file** at the configured location containing a **Quran Quote** and a **Hadith Quote** then opens in current view
   - `Noor: Open Dhikr file popup`: creates a **Dhikr file** at the configured location containing a **Quran Quote** and a **Hadith Quote** then opens in popup window view
+  - `Noor: Search quran quote`: opens a search dialog for the Quran; pick a verse, then insert it or write only that quote to the Dhikr file. A query typed in Arabic searches the Arabic text (`quran-uthmani`); any other query searches your chosen translation
+  - `Noor: Search hadith quote`: opens a search dialog for Hadith; pick a hadith, then insert it or write only that quote to the Dhikr file. Results come from the **Hadith language** you selected and need at least 3 characters; a query in a different script than the selected language is flagged in the dialog
 - scripting:
   - `noorJS.randomQuranQuote()`: this function returns a Quran Quote
   - `noorJS.randomHadithQuote()`: this function returns a Hadith Quote
+
+> The search commands are UI-only and are **not** exposed on `noorJS`.
 
 
 ## Integration with other plugins
@@ -43,12 +48,15 @@ obsidian plugins complement each other, here are some ideas
 - **Translation Options**: choose your favorite translation from the ones available in selected **Translation Language**
 
 ### Hadith settings
-- **Hadith language**: choose your preferred language to show the hadith in.
+- **Hadith language**: choose your preferred language to show the hadith in. The list comes from the hadith API (fetched on start) and shows each language in its own name.
+
+### Search settings
+- **Search results**: how many results the search dialog shows (default **20**, maximum **100**)
 
 
 ## Manually installing the plugin
 
-- Copy over `main.js`, `manifest.json` to your vault `.obsidian/plugins/noor/`.
+- Copy over `main.js`, `manifest.json`, and `styles.css` to your vault `.obsidian/plugins/noor/`.
 - Reload Obsidian to load the new version of your plugin.
 - Enable the plugin in the settings window.
 
@@ -93,6 +101,10 @@ The Quran verses are retrieved from
 The Hadith quotes are retrieved from
 
 - [hadeethenc.com](https://hadeethenc.com/api-docs/): Encyclopedia of Translated Prophetic Hadiths.
+
+## Privacy
+
+Noor is offline-first: it makes no network requests unless you run a quote, Dhikr file, or search command. The one exception is a single request on load for the list of hadith languages the API supports (used to word the search hints), which sends no data about you. All requests go only to the Quran/Hadith APIs listed above. When you **search**, the text you type is sent to the corresponding API as the search phrase; note contents and filenames are never transmitted.
 
 ## Contributions and suggestions
 Please feel free to open a [pull request](https://github.com/MKSherbini/obsidian-noor/pulls) with suggested improvements and new feature requests
