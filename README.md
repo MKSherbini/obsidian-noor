@@ -42,13 +42,13 @@ obsidian plugins complement each other, here are some ideas
 - **Dhikr file path**: configure where to create the Dhikr file
 
 ### Quran settings
-- **Reciter**: choose your favorite reciter from the drop-down menu
+- **Reciter**: choose your favorite reciter from the drop-down menu (the Arabic reciters that provide per-verse audio come from the API)
 - **Show translation**: choose Arabic only or dual language mode
 - **Translation Language**: choose the second language to show next to Arabic
 - **Translation Options**: choose your favorite translation from the ones available in selected **Translation Language**
 
 ### Hadith settings
-- **Hadith language**: choose your preferred language to show the hadith in. The list comes from the hadith API (fetched on start) and shows each language in its own name.
+- **Hadith language**: choose your preferred language to show the hadith in. The list comes from the hadith API and shows each language in its own name.
 
 ### Search settings
 - **Search results**: how many results the search dialog shows (default **20**, maximum **100**)
@@ -104,7 +104,7 @@ The Hadith quotes are retrieved from
 
 ## Privacy
 
-Noor is offline-first: it makes no network requests unless you run a quote, Dhikr file, or search command. The one exception is a single request on load for the list of hadith languages the API supports (used to word the search hints), which sends no data about you. All requests go only to the Quran/Hadith APIs listed above. When you **search**, the text you type is sent to the corresponding API as the search phrase; note contents and filenames are never transmitted.
+Noor is offline-first: it makes no network requests unless you run a quote, Dhikr file, or search command. The exception is a few requests on load for the lists the settings dropdowns need (hadith languages, quran translation languages and reciters); these send no data about you, and their results are cached in the plugin's settings so the dropdowns keep working offline. All requests go only to the Quran/Hadith APIs listed above. When you **search**, the text you type is sent to the corresponding API as the search phrase; note contents and filenames are never transmitted.
 
 ## Contributions and suggestions
 Please feel free to open a [pull request](https://github.com/MKSherbini/obsidian-noor/pulls) with suggested improvements and new feature requests

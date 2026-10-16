@@ -1,6 +1,7 @@
 import {surahs} from "../constants/surahs";
 import {Surah} from "../models/Surah";
 import {Ayah} from "../models/Ayah";
+import type {Edition} from "../models/Edition";
 import type {QuranSearchMatch} from "../models/QuranSearchMatch";
 import type {RequestUrlResponse} from "obsidian";
 import NoorPlugin from "../main";
@@ -90,8 +91,8 @@ export class QuranApi {
 	fetchData(surah: number, edition: string, startAyah: number, ayahRange = 1): Promise<Surah> {
 		return this.callApi<Surah>(this.prepareAPIurl(surah, edition, startAyah, ayahRange))
 			.then(data => {
-				// When the requested edition is unknown the API silently falls back to a default
-				// one (still HTTP 200), which hides a misconfigured reciter/translation. Surface it.
+				// An unknown edition silently falls back to a default one (still HTTP 200),
+				// hiding a misconfigured setting. Surface it.
 				if (data.edition?.identifier !== edition) {
 					throw new Error(`The Quran edition "${edition}" is not available. Please check the selected reciter and translation in the settings.`);
 				}
@@ -102,8 +103,7 @@ export class QuranApi {
 	async callApi<T>(url: string): Promise<T> {
 		const response = await this.request(url);
 
-		// The API wraps responses as { code, status, data } and can return HTTP 200 for
-		// errors, so the body code has to be checked in addition to the HTTP status.
+		// The API can return HTTP 200 for errors, so the body code is checked too.
 		const body = response.json as { code?: unknown; data?: T } | null;
 		const apiCode = (body && typeof body.code === 'number') ? body.code : response.status;
 		if (response.status !== 200 || apiCode !== 200) {
@@ -115,6 +115,24 @@ export class QuranApi {
 		}
 
 		return body.data;
+	}
+
+	/** The text translation editions. */
+	public translations(): Promise<Edition[]> {
+		return this.callApi<Edition[]>('https://api.alquran.cloud/v1/edition?format=text&type=translation');
+	}
+
+	/**
+	 * Arabic audio editions with per-ayah recitation: whole-surah editions carry none, and the API
+	 * repeats some recitations with a numbered identifier.
+	 */
+	public async reciters(): Promise<Edition[]> {
+		const editions = await this.callApi<Edition[]>('https://api.alquran.cloud/v1/edition?format=audio');
+		return editions.filter(edition =>
+			edition.language === 'ar'
+			&& edition.type !== 'surahbysurah'
+			&& !/-\d+$/.test(edition.identifier),
+		);
 	}
 
 	/** Search an edition for a keyword. A 404 means "no match" and yields an empty list. */

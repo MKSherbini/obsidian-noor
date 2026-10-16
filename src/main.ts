@@ -9,15 +9,16 @@ import {FileUtils} from "./utils/FileUtils";
 import {Logger} from "./utils/Logger";
 import type {QuoteSearchAction, QuoteSearchItem, QuoteSearchOptions} from "./ui/QuoteSearchModal";
 import {QuoteSearchModal} from "./ui/QuoteSearchModal";
-import type {HadithLanguage} from "./models/HadithLanguage";
+import {buildDropdownOptions} from "./utils/DropdownOptions";
+import type {DropdownOptions} from "./utils/DropdownOptions";
 
-/** Covers the Arabic script, including Supplement/Extended-A and presentation forms. */
+/** Matches any arabic-script character. */
 const ARABIC_SCRIPT = /[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff\ufb50-\ufdff\ufe70-\ufefc]/;
 
-/** Fallback arabic-script hadith languages, used until the API list loads. */
+/** Fallback until the API language list loads. */
 const ARABIC_HADITH_LANGUAGES = new Set(['ar', 'fa', 'ur', 'ug']);
 
-/** The hadith API answers a phrase shorter than this with HTTP 400, so it is never sent one. */
+/** The API rejects shorter phrases, so they are never sent. */
 const HADITH_MIN_QUERY_LENGTH = 3;
 
 /**
@@ -44,16 +45,16 @@ export default class NoorPlugin extends Plugin {
 	quranApi!: QuranApi;
 	hadithApi!: HadithApi;
 
-	/** Hadith languages from the API (loaded on start); the dropdown and the hints read this. */
-	hadithLanguages: HadithLanguage[] = [];
-	/** Arabic-script codes from {@link hadithLanguages}; the constant is the offline fallback. */
-	private arabicHadithLanguages = new Set(ARABIC_HADITH_LANGUAGES);
+	/** Settings dropdown contents, rebuilt when a fetched list changes. */
+	dropdownOptions!: DropdownOptions;
 
 	async onload() {
 		await this.loadSettings();
 		this.quranApi = new QuranApi(this);
 		this.hadithApi = new HadithApi(this);
+		this.dropdownOptions = buildDropdownOptions(this.settings);
 		void this.loadHadithLanguages();
+		void this.loadQuranEditions();
 
 		window.noorJS = {
 			obsidian,
@@ -65,7 +66,6 @@ export default class NoorPlugin extends Plugin {
 		}
 
 
-		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
 			id: 'random-quran-quote',
 			name: 'Random quran quote',
@@ -131,20 +131,10 @@ export default class NoorPlugin extends Plugin {
 		});
 
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new NoorSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		// this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-		// 	console.log('click', evt);
-		// });
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		// this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
 	}
 
-	/** Runs a command body, surfacing any failure as a Notice instead of an unhandled rejection. */
+	/** Runs a command, showing any failure as a Notice. */
 	private async runCommand(action: () => Promise<void>) {
 		try {
 			await action();
@@ -214,7 +204,7 @@ export default class NoorPlugin extends Plugin {
 
 	private async searchQuranItems(query: string, limit: number): Promise<QuoteSearchItem[]> {
 		const arabic = ARABIC_SCRIPT.test(query);
-		// The translation edition holds no arabic text, so an arabic query must go to the arabic edition.
+		// The translation edition has no arabic text, so an arabic query goes to the arabic edition.
 		const edition = arabic ? 'quran-uthmani' : this.settings.translationOption;
 		const matches = await this.quranApi.search(query, edition, limit);
 		return matches.map(match => ({
@@ -238,20 +228,24 @@ export default class NoorPlugin extends Plugin {
 		}));
 	}
 
-	/**
-	 * A query whose script differs from the selected dataset is the likely cause of an empty result.
-	 * An arabic query can still match a non-arabic dataset, so this only runs after a real miss.
-	 */
+	/** Explains a miss caused by searching a dataset in another script. */
 	private hadithNoResultsHint(query: string): string | undefined {
 		const language = this.settings.hadithLanguage;
-		if (ARABIC_SCRIPT.test(query) === this.arabicHadithLanguages.has(language)) return undefined;
+		if (ARABIC_SCRIPT.test(query) === this.hadithDatasetUsesArabicScript(language)) return undefined;
 
 		return `No results. ${this.hadithLanguageHint(language)}`;
 	}
 
+	/** Whether the hadith dataset for `language` is written in arabic script. */
+	private hadithDatasetUsesArabicScript(language: string): boolean {
+		// Before the language list loads the dropdown label is just the code, hence the fallback.
+		const native = this.dropdownOptions.hadithLanguages[language] ?? language;
+		return ARABIC_SCRIPT.test(native) || ARABIC_HADITH_LANGUAGES.has(language);
+	}
+
 	/** Guidance for a query whose script does not fit the selected hadith language. */
 	private hadithLanguageHint(language: string): string {
-		const label = this.hadithLanguages.find(entry => entry.code === language)?.native ?? language;
+		const label = this.dropdownOptions.hadithLanguages[language] ?? language;
 		return `This search matches ${label} hadith text. Type in ${label}, or change the hadith language in the settings.`;
 	}
 
@@ -305,19 +299,43 @@ export default class NoorPlugin extends Plugin {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
 	}
 
-	/** Loads the API's language list; the settings dropdown reads it, so a failure leaves it empty. */
+	/** Refreshes the hadith language list from the API. */
 	private async loadHadithLanguages() {
 		try {
 			const languages = await this.hadithApi.languages();
 			if (languages == null) return;
 
-			this.hadithLanguages = languages;
-			this.arabicHadithLanguages = new Set(
-				languages.filter(language => ARABIC_SCRIPT.test(language.native)).map(language => language.code),
-			);
+			if (await this.storeFetchedList('hadithLanguages', languages)) {
+				this.dropdownOptions = buildDropdownOptions(this.settings);
+			}
 		} catch (error) {
 			Logger.error('Could not load the hadith language list', error);
 		}
+	}
+
+	/** Refreshes the translation and reciter lists from the API. */
+	private async loadQuranEditions() {
+		try {
+			const [translations, reciters] = await Promise.all([
+				this.quranApi.translations(),
+				this.quranApi.reciters(),
+			]);
+			const translationsChanged = await this.storeFetchedList('translations', translations);
+			const recitersChanged = await this.storeFetchedList('reciters', reciters);
+			if (translationsChanged || recitersChanged) {
+				this.dropdownOptions = buildDropdownOptions(this.settings);
+			}
+		} catch (error) {
+			Logger.error('Could not load the Quran editions', error);
+		}
+	}
+
+	/** Stores a fetched list, saving only when it changed. Returns whether it changed. */
+	private async storeFetchedList<K extends keyof NoorPluginSettings>(key: K, value: NoorPluginSettings[K]): Promise<boolean> {
+		if (JSON.stringify(this.settings[key]) === JSON.stringify(value)) return false;
+		this.settings[key] = value;
+		await this.saveSettings();
+		return true;
 	}
 
 	async saveSettings() {

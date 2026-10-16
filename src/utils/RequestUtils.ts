@@ -5,9 +5,8 @@ const DEFAULT_TIMEOUT_MS = 20000;
 
 export class RequestUtils {
 	/**
-	 * `requestUrl` has no timeout, and it throws on any 400+ status by default. Both hide the
-	 * response (a 404 from these APIs just means "no match"), so we disable the throw and race
-	 * the request against a timer instead.
+	 * `requestUrl` has no timeout and throws on 400+, which would hide a "no match" 404,
+	 * so disable the throw and race a timer instead.
 	 */
 	static async requestUrlWithTimeout(url: string, timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<RequestUrlResponse> {
 		let timer: number | undefined;

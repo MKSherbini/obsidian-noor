@@ -61,8 +61,7 @@ ${this.getMoreSection(hadith)}
 	async callApi<T>(url: string): Promise<null | T> {
 		const response = await this.request(url);
 
-		// A 404 just means this id/language has no hadith (used to retry with another random id);
-		// any other failure is a real error and must be surfaced.
+		// A 404 means this id/language has no hadith (retry with another id); anything else is a real error.
 		if (response.status === 404) return null;
 		if (response.status !== 200) {
 			Logger.error('Unexpected Hadith API status', { status: response.status, url });
@@ -91,7 +90,7 @@ ${this.getMoreSection(hadith)}
 		}
 
 		const results = Array.isArray(response.json) ? response.json as HadithSearchResult[] : [];
-		// The endpoint ignores `per_page`/`page` and always returns the first ~100 matches.
+		// The endpoint ignores paging and returns the first ~100 matches.
 		return results.slice(0, limit);
 	}
 

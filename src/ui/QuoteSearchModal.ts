@@ -1,7 +1,7 @@
 import {App, Modal, SearchComponent} from 'obsidian';
 import {Logger} from '../utils/Logger';
 
-/** A single search hit. `code` is handed back to the plugin to build the final quote. */
+/** A single search hit; `code` is handed back to build the quote. */
 export interface QuoteSearchItem {
 	/** Identifier expected by the plugin's quote builders (e.g. "2:255" or a Hadith id). */
 	code: string;
@@ -19,10 +19,10 @@ export interface QuoteSearchOptions {
 	emptyText: string;
 	/** Namespace for the session cache, so different sources don't collide. */
 	cacheKey: string;
-	/** Shorter queries are never searched, so a source that rejects them is not asked. Defaults to 1. */
+	/** Queries shorter than this are never searched. Defaults to 1. */
 	minQueryLength?: number;
 	search: (query: string) => Promise<QuoteSearchItem[]>;
-	/** Overrides the default `No results for …` line; return undefined to keep the default. */
+	/** Overrides the default no-results line; return undefined to keep it. */
 	noResultsText?: (query: string) => string | undefined;
 	onChoose: (item: QuoteSearchItem, action: QuoteSearchAction) => void | Promise<void>;
 }
@@ -57,8 +57,8 @@ function cacheSet(key: string, items: QuoteSearchItem[]) {
 }
 
 /**
- * Debounced, cancellable search modal. It only knows how to render a list of
- * {@link QuoteSearchItem}s; the source-specific search lives in the caller.
+ * Debounced, cancellable modal that renders a list of {@link QuoteSearchItem}s;
+ * the search itself comes from the caller.
  */
 export class QuoteSearchModal extends Modal {
 	private readonly options: QuoteSearchOptions;
@@ -162,7 +162,7 @@ export class QuoteSearchModal extends Modal {
 		return this.options.minQueryLength ?? 1;
 	}
 
-	/** What to show instead of results: nothing typed yet, too short to search, or no hits. */
+	/** The text to show instead of results. */
 	private stateText(query: string): string {
 		if (query.length === 0) return this.options.emptyText;
 		if (query.length < this.minQueryLength) return `Type at least ${this.minQueryLength} characters to search.`;
@@ -329,7 +329,7 @@ export class QuoteSearchModal extends Modal {
 		try {
 			await this.options.onChoose(item, action);
 		} catch (error) {
-			// `onChoose` surfaces its own errors; this is a last-resort guard against an unhandled rejection.
+			// `onChoose` surfaces its own errors; guard against an unhandled rejection.
 			Logger.error('Quote action failed', error);
 		}
 	}

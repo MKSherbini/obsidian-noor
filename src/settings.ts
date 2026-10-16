@@ -1,8 +1,7 @@
 import {App, PluginSettingTab, Setting} from 'obsidian';
 import NoorPlugin from "./main";
-import {reciters} from "./constants/reciters";
-import {translations} from "./constants/translations";
-import {languageNames} from "./constants/languages";
+import type {HadithLanguage} from "./models/HadithLanguage";
+import type {Edition} from "./models/Edition";
 
 export interface NoorPluginSettings {
 	dhikrFilepath: string;
@@ -12,6 +11,12 @@ export interface NoorPluginSettings {
 	translationOption: string;
 	hadithLanguage: string;
 	searchResultLimit: number;
+	/** Hadith languages from the API, kept for offline use. */
+	hadithLanguages: HadithLanguage[];
+	/** Translation editions from the API, kept for offline use. */
+	translations: Edition[];
+	/** Arabic reciters from the API, kept for offline use. */
+	reciters: Edition[];
 }
 
 export const DEFAULT_SETTINGS: NoorPluginSettings = {
@@ -21,39 +26,24 @@ export const DEFAULT_SETTINGS: NoorPluginSettings = {
 	translationLanguage: 'en',
 	translationOption: 'en.ahmedali',
 	hadithLanguage: 'ar',
-	searchResultLimit: 20
+	searchResultLimit: 20,
+	hadithLanguages: [],
+	translations: [],
+	reciters: []
 }
 
 
 export class NoorSettingTab extends PluginSettingTab {
 	plugin: NoorPlugin;
-	reciterOptions: Record<string, string> = {};
-	translationLanguagesOptions: { [key: string]: string } = {};
-	translationOptionsMap = new Map<string, Record<string, string>>();
 
 	constructor(app: App, plugin: NoorPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
-
-		reciters.sort((a, b) => a.identifier.localeCompare(b.identifier));
-		translations.sort((a, b) => a.identifier.localeCompare(b.identifier));
-
-		reciters.forEach(reciter => {
-			this.reciterOptions[reciter.identifier] = reciter.englishName;
-		})
-		translations.forEach(translation => {
-			const languageName = languageNames.get(translation.language);
-			if (languageName != void 0)
-				this.translationLanguagesOptions[translation.language] = languageName;
-			if (!this.translationOptionsMap.has(translation.language)) this.translationOptionsMap.set(translation.language, {});
-			this.translationOptionsMap.get(translation.language)![translation.identifier] = translation.name;
-		});
-
-		this.translationLanguagesOptions = Object.fromEntries(Object.entries(this.translationLanguagesOptions).sort((a, b) => a[1].localeCompare(b[1])))
 	}
 
 	display(): void {
 		const {containerEl} = this;
+		const options = this.plugin.dropdownOptions;
 
 		containerEl.empty();
 		new Setting(containerEl).setName('Dhikr file').setHeading();
@@ -77,7 +67,7 @@ export class NoorSettingTab extends PluginSettingTab {
 			.setDesc('Which reciter voice to use')
 			.addDropdown((dropdown) => {
 				dropdown
-					.addOptions(this.reciterOptions)
+					.addOptions(options.reciters)
 					.setValue(this.plugin.settings.reciter)
 					.onChange(async (value) => {
 						this.plugin.settings.reciter = value
@@ -104,18 +94,18 @@ export class NoorSettingTab extends PluginSettingTab {
 				.setDesc('Which translation language to use')
 				.addDropdown((dropdown) => {
 					dropdown
-						.addOptions(this.translationLanguagesOptions)
+						.addOptions(options.translationLanguages)
 						.setValue(this.plugin.settings.translationLanguage)
 						.onChange(async (value) => {
 							this.plugin.settings.translationLanguage = value
-							const options = Object.keys(this.translationOptionsMap.get(this.plugin.settings.translationLanguage) ?? {});
-							this.plugin.settings.translationOption = options[0] ?? '';
+							const identifiers = Object.keys(options.translationsByLanguage.get(value) ?? {});
+							this.plugin.settings.translationOption = identifiers[0] ?? '';
 							await this.plugin.saveSettings();
 							this.display();
 						});
 				});
 
-			const translationOptions = this.translationOptionsMap.get(this.plugin.settings.translationLanguage) ?? {};
+			const translationOptions = options.translationsByLanguage.get(this.plugin.settings.translationLanguage) ?? {};
 			new Setting(containerEl)
 				.setName('Translation options')
 				.setDesc('Which translation to use')
@@ -134,22 +124,12 @@ export class NoorSettingTab extends PluginSettingTab {
 		containerEl.createEl("br");
 		new Setting(containerEl).setName('Hadith').setHeading();
 
-		const hadithLanguageOptions: Record<string, string> = {};
-		for (const language of this.plugin.hadithLanguages) {
-			hadithLanguageOptions[language.code] = language.native;
-		}
-		// The list is fetched on start; until it arrives, keep at least the selected language.
-		const currentHadithLanguage = this.plugin.settings.hadithLanguage;
-		if (hadithLanguageOptions[currentHadithLanguage] == null) {
-			hadithLanguageOptions[currentHadithLanguage] = currentHadithLanguage;
-		}
-
 		new Setting(containerEl)
 			.setName('Hadith language')
 			.setDesc('Which hadith language to use')
 			.addDropdown((dropdown) => {
 				dropdown
-					.addOptions(hadithLanguageOptions)
+					.addOptions(options.hadithLanguages)
 					.setValue(this.plugin.settings.hadithLanguage)
 					.onChange(async (value) => {
 						this.plugin.settings.hadithLanguage = value
