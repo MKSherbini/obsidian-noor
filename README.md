@@ -1,16 +1,29 @@
 # Obsidian Noor Plugin
 
-[Noor](https://github.com/MKSherbini/obsidian-noor) is a plugin for [Obsidian.md](https://obsidian.md/). It aims to help Muslims stay enlightened with Islam, Quran, Hadith, and Sunnah
+[Noor](https://github.com/MKSherbini/obsidian-noor) is a plugin for [Obsidian.md](https://obsidian.md/) that brings Islamic inspiration to your notes. Insert Quran verses, authentic Hadith, or build a Dhikr file with just a command. Explore with fast search for both Quran and Hadith, choose your preferred reciter and translation, and even script it from Templates. Best of all, it respects your privacy and works offline when lists are cached.
 
 [![Watch the video](https://img.youtube.com/vi/HixhQK6CVXI/maxresdefault.jpg)](https://youtu.be/HixhQK6CVXI)
 
 
 
+## Screenshots
+
+| Quran search                                                           | Hadith search |
+|------------------------------------------------------------------------| --- |
+| <img src="images/quran-search.jpg" width="420" alt="Search the Quran"> | <img src="images/hadith-search.jpg" width="420" alt="Search Hadith"> |
+| Translated Hadith quote                                                | Dhikr file |
+| <img src="images/hadith-quote.jpg" width="420" alt="Hadith quote">     | <img src="images/dhikr-file.jpg" width="420" alt="Dhikr file"> |
+
+
+
 ## Features
-- Insert a **Quran Quote** at the current location containing a random verse with recitation in Arabic, chosen translation language, and a hyperlink for more info.
-- Insert a **Hadith Quote** at the current location containing a random hadith in the chosen language and a hyperlink for more info.
-- Create a **Dhikr file** at the configured location containing a **Quran Quote** and a **Hadith Quote** (can be used again to update file with new quotes)
-- **Search** the Quran or the Hadith collection and act on the exact quote you pick: insert it, or write only that quote to the Dhikr file.
+- **Random Quran quotes** — insert Arabic verses with optional audio and translation (choose your reciter and translation).
+- **Random Hadith quotes** — insert authentic Hadith in your preferred language.
+- **Dhikr file** — create or refresh a dedicated Dhikr note with a Quran quote and Hadith; open it in the current pane or a popup.
+- **Search Quran & Hadith** — find verses by Arabic or translation text, or search Hadith by keywords; insert the exact quote, overwrite the Dhikr file with only that quote, or append the quote to the Dhikr file.
+- **Scriptable** — use `noorJS.randomQuranQuote()` and `noorJS.randomHadithQuote()` from Templater or other scripts.
+- **Customizable** — toggle audio, pick reciter/translation, choose Hadith language, and set how many search results appear.
+- **Privacy-first** — offline-friendly (lists are cached after first load), and only contacts Quran/Hadith APIs when needed.
 
 ## Usage
 After enabling the plugin in the settings menu, you should see the added commands and the `noorJS` object.
