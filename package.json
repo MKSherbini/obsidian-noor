@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-noor-plugin",
-	"version": "0.0.7",
+	"version": "0.1.0",
 	"description": "Aims to help Muslims stay enlightened with Islam, Quran, Hadith, and Sunnah.",
 	"main": "main.js",
 	"scripts": {
