@@ -85,6 +85,11 @@ const context = await esbuild.context({
 		...builtinModules],
 	format: "cjs",
 	target: "es2022",
+	// Turns the plugin's console diagnostics on for dev builds and off for
+	// production ones (see `src/utils/Logger.ts`).
+	define: {
+		__DEV__: String(!prod),
+	},
 	logLevel: "info",
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,

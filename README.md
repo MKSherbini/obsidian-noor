@@ -71,6 +71,11 @@ into `.obsidian/plugins/noor/` of the local test vault located next to this repo
 (`../dev`). Just reload Obsidian (or use the [hot-reload](https://github.com/pjeby/hot-reload)
 plugin) to pick up the changes.
 
+`npm run dev` also turns the plugin's console diagnostics on (messages are prefixed with
+`Noor:`); the production build leaves them off, so released builds stay quiet. Reloading is
+what switches builds, so stop the watcher (`Ctrl+C`) before running `npm run build` — until
+then, any source change re-copies a dev build into the vault.
+
 To test against a different vault, set the `OBSIDIAN_VAULT` environment variable to
 the vault path before running the build, for example:
 

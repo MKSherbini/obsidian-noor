@@ -132,6 +132,8 @@ export default class NoorPlugin extends Plugin {
 
 
 		this.addSettingTab(new NoorSettingTab(this.app, this));
+
+		Logger.debug(`Dev build v${this.manifest.version}: console diagnostics are on`);
 	}
 
 	/** Runs a command, showing any failure as a Notice. */

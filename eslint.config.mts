@@ -18,6 +18,8 @@ export default defineConfig(
 		languageOptions: {
 			globals: {
 				...globals.browser,
+				// Injected by esbuild in dev builds (see `esbuild.config.mjs` and `src/globals.d.ts`).
+				__DEV__: "readonly",
 			},
 			parserOptions: {
 				projectService: {
