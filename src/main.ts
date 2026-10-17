@@ -155,12 +155,17 @@ export default class NoorPlugin extends Plugin {
 		await this.writeDhikrFile("\n" + quranQuote + "\n" + hadithQuote, popup);
 	}
 
-	private async writeDhikrFile(content: string, popup: boolean) {
+	private async writeDhikrFile(content: string, popup: boolean, append = false) {
 		const target = this.app.vault.getAbstractFileByPath(this.settings.dhikrFilepath);
 		let dhikrFile: TFile;
 		if (target instanceof TFile) {
 			// Update in place so a failed write can never destroy the existing note.
-			await this.app.vault.modify(target, content);
+			if (append) {
+				const existing = await this.app.vault.read(target);
+				await this.app.vault.modify(target, (existing.trimEnd() + '\n\n' + content.trim() + '\n').replace(/\n{3,}/g, '\n\n'));
+			} else {
+				await this.app.vault.modify(target, content);
+			}
 			dhikrFile = target;
 		} else {
 			const lastSlashIdx = this.settings.dhikrFilepath.lastIndexOf('/');
@@ -174,6 +179,17 @@ export default class NoorPlugin extends Plugin {
 		}
 
 		await FileUtils.openFile(this.app, dhikrFile, popup ? 'window' : false);
+		// Reveal the end after append
+		if (append) {
+			const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+			if (view?.file?.path === dhikrFile.path) {
+				const editor = view.editor;
+				const last = editor.lastLine();
+				const ch = editor.getLine(last).length;
+				editor.setCursor({line: last, ch});
+				editor.scrollIntoView({from: {line: last, ch}, to: {line: last, ch}}, true);
+			}
+		}
 	}
 
 	private openSearch(source: 'quran' | 'hadith') {
@@ -266,7 +282,9 @@ export default class NoorPlugin extends Plugin {
 			return;
 		}
 
-		await this.writeDhikrFile(await build(item.code), action === 'file-popup');
+		const append = action === 'file-append' || action === 'file-append-popup';
+		const popup = action === 'file-popup' || action === 'file-append-popup';
+		await this.writeDhikrFile(await build(item.code), popup, append);
 	}
 
 	private async randomHadithQuoteJS() {

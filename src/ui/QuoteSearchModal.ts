@@ -11,7 +11,7 @@ export interface QuoteSearchItem {
 	detail: string;
 }
 
-export type QuoteSearchAction = 'insert' | 'file' | 'file-popup';
+export type QuoteSearchAction = 'insert' | 'file' | 'file-popup' | 'file-append' | 'file-append-popup';
 
 export interface QuoteSearchOptions {
 	title: string;
@@ -35,8 +35,10 @@ interface ActionDefinition {
 
 const ACTIONS: ActionDefinition[] = [
 	{id: 'insert', label: 'Insert at cursor', description: 'Insert this quote as a new block at the cursor'},
-	{id: 'file', label: 'Generate Dhikr file', description: 'Write only this quote to the Dhikr file and open it'},
-	{id: 'file-popup', label: 'Generate Dhikr file in a popup', description: 'Write only this quote to the Dhikr file and open it in a popup window'},
+	{id: 'file', label: 'Generate Dhikr file (overwrite)', description: 'Write only this quote to the Dhikr file and open it'},
+	{id: 'file-append', label: 'Append to Dhikr file', description: 'Append this quote to the Dhikr file and open it'},
+	{id: 'file-popup', label: 'Generate Dhikr file (overwrite, popup)', description: 'Write only this quote to the Dhikr file and open it in a popup window'},
+	{id: 'file-append-popup', label: 'Append to Dhikr file (popup)', description: 'Append this quote to the Dhikr file and open it in a popup window'},
 ];
 
 const DEBOUNCE_MS = 300;
