@@ -6,6 +6,7 @@ import type {Edition} from "./models/Edition";
 export interface NoorPluginSettings {
 	dhikrFilepath: string;
 	reciter: string;
+	showAudio: boolean;
 	showTranslation: boolean;
 	translationLanguage: string;
 	translationOption: string;
@@ -22,6 +23,7 @@ export interface NoorPluginSettings {
 export const DEFAULT_SETTINGS: NoorPluginSettings = {
 	dhikrFilepath: 'dhikr.md',
 	reciter: 'ar.abdulbasitmurattal',
+	showAudio: true,
 	showTranslation: true,
 	translationLanguage: 'en',
 	translationOption: 'en.ahmedali',
@@ -71,6 +73,18 @@ export class NoorSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.reciter)
 					.onChange(async (value) => {
 						this.plugin.settings.reciter = value
+						await this.plugin.saveSettings();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName('Show audio')
+			.setDesc('Add an audio player to quran quotes')
+			.addToggle((toggle) => {
+				toggle
+					.setValue(this.plugin.settings.showAudio)
+					.onChange(async (value) => {
+						this.plugin.settings.showAudio = value
 						await this.plugin.saveSettings();
 					});
 			});

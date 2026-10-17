@@ -60,7 +60,7 @@ export class QuranApi {
 	}
 
 	private getAudioBlock(ayah: Ayah) {
-		if (!ayah.audio) return '';
+		if (!this.plugin.settings.showAudio || !ayah.audio) return '';
 
 		return `<audio src="${ayah.audio}" controls>
 <p> Audio tag not supported </p>

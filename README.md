@@ -43,6 +43,7 @@ obsidian plugins complement each other, here are some ideas
 
 ### Quran settings
 - **Reciter**: choose your favorite reciter from the drop-down menu (the Arabic reciters that provide per-verse audio come from the API)
+- **Show audio**: toggle to include or hide the audio player in Quran quotes
 - **Show translation**: choose Arabic only or dual language mode
 - **Translation Language**: choose the second language to show next to Arabic
 - **Translation Options**: choose your favorite translation from the ones available in selected **Translation Language**
