@@ -1,8 +1,25 @@
-/*
+.noor-search-body {
+	margin-top: var(--size-4-2);
+	max-height: 50vh;
+	overflow-y: auto;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.noor-search-state {
+	padding: var(--size-4-2) 0;
+	color: var(--text-muted);
+}
 
-If your plugin does not need CSS, delete this file.
+.noor-search-state.is-error {
+	color: var(--text-error);
+}
 
-*/
+.noor-search-result-detail {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.noor-search-back {
+	margin-top: var(--size-4-2);
+	border-top: 1px solid var(--background-modifier-border);
+	color: var(--text-muted);
+}
